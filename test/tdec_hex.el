@@ -84,8 +84,8 @@
 
 (ert-deftest test-hex-to-neg-8-bits ()
   (let ((num-bits 8)
-        (inp '("0xff" "ff" "0xfe" "FE"))
-        (ref '(   -1   -1     -2   -2))
+        (inp '("0xff" "ff" "0xfe" "FD" "8'hfc" "'hfb"))
+        (ref '(   -1   -1     -2   -3      -4    251))
         out)
     (dolist (hex inp)
       (push (basejump-hex-to-dec hex num-bits) out))
@@ -101,8 +101,8 @@
     (should (equal ref (nreverse out)))))
 
 (ert-deftest test-hex-to-dec-auto-num-bits ()
-  (let ((inp '("8'hff" "16'hff"))
-        (ref '(    -1      255))
+  (let ((inp '("8'hff" "16'hff" "'h7fff" "'hffff" "'hffffffff"))
+        (ref '(    -1      255    32767    65535           -1))
         out)
     (dolist (hex inp)
       (push (basejump-hex-to-dec hex) out))

@@ -106,11 +106,15 @@ many bits.  If this argument is not specified, it defaults to
     ;; versions.
     (save-match-data
       (string-match "\\(?:\\(?:\\(?1:[0-9]*\\)'h\\)\\|0x\\)?\\(?2:[0-9a-fA-F]+\\)" hex)
-      ;; (message "dbg match 1 : %S" (match-string-no-properties 1 hex))
-      ;; (message "dbg match 2 : %S" (match-string-no-properties 2 hex))
-      (when (match-string-no-properties 1 hex)
-        (setq num-bits (string-to-number (match-string-no-properties 1 hex))))
-      (setq hex (match-string-no-properties 2 hex)))
+      (let ((num-bits-str (match-string-no-properties 1 hex))
+            (hex-str (match-string-no-properties 2 hex)))
+        ;; (message "dbg match 1 : %S" num-bits-str)
+        ;; (message "dbg match 2 : %S" hex-str)
+        (when (stringp num-bits-str)
+          (if (string= "" num-bits-str)
+              (setq num-bits 32)
+            (setq num-bits (string-to-number num-bits-str))))
+        (setq hex hex-str)))
     (setq num-bits (or num-bits 16)) ;Default value of `num-bits' if not set or parsed from `hex' string
     (let* ((unsigned-max-pos (1- (expt 2 num-bits)))
            (signed-max-pos (lsh unsigned-max-pos -1))
