@@ -145,8 +145,6 @@ When called non-interactively, return the hex string."
    (if (use-region-p)
        (list nil nil (region-beginning) (region-end))
      (list (read-string "Enter a hex number: "))))
-  (when (null num-bits)
-    (setq num-bits 16))
   (cond
    ((and (interactive-p) beg end) ;Fn called interactively after selecting a region
     (save-excursion
