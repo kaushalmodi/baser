@@ -34,7 +34,7 @@
 ;;; Functions
 
 ;;;; Decimal <-> Hexadecimal
-(defun basejump-dec-to-hex (dec &optional min-bytes)
+(defun basejump-dec-to-hex--core (dec &optional min-bytes)
   "Convert signed decimal number DEC to hex.
 
 DEC is a positive or negative integer.
@@ -50,6 +50,40 @@ bytes in the output hex string."
       (let ((max (expt 2 (* 8 bytes))))
         (setq dec (- max (- dec)))))
     (format hex-fmt dec)))
+
+(defun basejump-dec-to-hex (dec &optional min-bytes beg end)
+  "Convert signed decimal number DEC to hex.
+
+DEC is a positive or negative integer.
+
+If a region is selected, convert all integers in the selected
+region in the buffer to hex.  BEG and END are auto-set to the
+beginning and end of the selected region.
+
+Else, prompt the user to enter the integer in minibuffer. The hex
+output is printed in the echo area.
+
+When called non-interactively, return the hex string.
+
+Optional argument MIN-BYTES is used to set the minimum number of
+bytes in the output hex string."
+  (interactive
+   (if (use-region-p)
+       (list nil nil (region-beginning) (region-end))
+     (list (string-to-number
+            (read-string "Enter an integer in decimal: ")))))
+  (cond
+   ((and (interactive-p) beg end) ;Fn called interactively after selecting a region
+    (while (re-search-forward "\\-?[0-9]+\\b" nil :noerror)
+      (let ((hex (basejump-dec-to-hex--core
+                  (string-to-number (match-string-no-properties 0)))))
+        (replace-match hex))))
+   ((and (interactive-p) dec) ;Fn called interactively without selecting a region
+    (message "dec %d -> %s" dec (basejump-dec-to-hex--core dec)))
+   (dec                                 ;Fn called non-interactively
+    (basejump-dec-to-hex--core dec min-bytes))
+   (t                          ;not interactive, no region, dec is nil
+    (error "Unsupported scenario"))))
 
 (defun basejump-hex-to-dec (hex num-bytes)
   "Convert HEX string to a signed decimal number.
