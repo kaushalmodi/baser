@@ -89,14 +89,15 @@ bytes in the output hex string."
    (t                          ;not interactive, no region, dec is nil
     (error "Unsupported scenario"))))
 
-(defun basejump-hex-to-dec (hex num-bytes)
+(defun basejump-hex-to-dec--core (hex num-bytes)
   "Convert HEX string to a signed decimal number.
 
 The input is represented by NUM-BYTES number of bytes."
   (unless (stringp hex)
     (error (format "Input %S is not an string" hex)))
   (let* ((hex (string-remove-prefix "0x" hex))
-         (trimmed-hex (string-trim-left hex "0+[^0]"))
+         (trimmed-hex (save-match-data
+                        (string-trim-left hex "0+[^0]")))
          (hex-len (length trimmed-hex))
          (num-nib (* 2 num-bytes)))
     (when (> hex-len num-nib)
@@ -104,10 +105,54 @@ The input is represented by NUM-BYTES number of bytes."
     (let* ((unsigned-max-pos (1- (expt 2 (* 8 num-bytes))))
            (signed-max-pos (lsh unsigned-max-pos -1))
            (unsigned-val (string-to-number hex 16))
-           (negativep (> unsigned-val signed-max-pos)))
-      (if negativep
-          (- unsigned-val (1+ unsigned-max-pos))
-        unsigned-val))))
+           (negativep (> unsigned-val signed-max-pos))
+           (dec (if negativep
+                    (- unsigned-val (1+ unsigned-max-pos))
+                  unsigned-val)))
+      dec)))
+
+(defun basejump-hex-to-dec (hex &optional num-bytes beg end)
+  "Convert HEX string to a signed decimal number.
+
+The input is represented by NUM-BYTES number of bytes.
+
+If a region is selected, convert all hex strings in the selected
+region in the buffer to decimal.  BEG and END are auto-set to the
+beginning and end of the selected region.
+
+Else, prompt the user to enter a hex number in the
+minibuffer. The decimal output is printed in the echo area.
+
+When called non-interactively, return the hex string."
+  (interactive
+   (if (use-region-p)
+       (list nil nil (region-beginning) (region-end))
+     (list (read-string "Enter a hex number: "))))
+  (when (null num-bytes)
+    (setq num-bytes 2))
+  (let ((num-bits (* 8 num-bytes)))
+    (cond
+     ((and (interactive-p) beg end) ;Fn called interactively after selecting a region
+      (save-excursion
+        (save-restriction
+          (narrow-to-region beg end)
+          (goto-char beg)
+          (while (re-search-forward "\\(?:\\(?:\\(?1:[0-9]*\\)'h\\)\\|0x\\)\\(?2:[0-9a-fA-F]+\\)" nil :noerror)
+            (let* ((num-bits (if (match-string-no-properties 1)
+                                 (string-to-number (match-string-no-properties 1))
+                               num-bits))
+                   (num-bytes (ceiling (/ num-bits 8.0)))
+                   (hex (match-string-no-properties 2))
+                   (dec (basejump-hex-to-dec--core hex num-bytes)))
+              (replace-match (number-to-string dec) nil nil nil 0))))))
+     ((and (interactive-p) hex) ;Fn called interactively without selecting a region
+      (message "%s"
+               (format "hex %d'h%s -> %s"
+                       num-bits hex (basejump-hex-to-dec--core hex num-bytes))))
+     (hex                                 ;Fn called non-interactively
+      (basejump-hex-to-dec--core hex num-bytes))
+     (t                        ;not interactive, no region, hex is nil
+      (error "Unsupported scenario")))))
 
 
 (provide 'basejump)
