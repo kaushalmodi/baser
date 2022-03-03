@@ -93,7 +93,7 @@ bytes in the output hex string."
   "Parse the input HEX string.
 
 Return a cons (NUM-BITS . HEX-STR) where NUM-BITS is the number
-of bits if parsed from HEX, and HEX-STR is just the hex string
+of bits parsed from HEX, and HEX-STR is just the hex string
 portion without any prefixes or underscores.
 
 If the HEX string has the \"\\='h\" notation (e.g. \"\\='habcd\"),
@@ -104,9 +104,10 @@ If a hexadecimal string cannot be parsed, return nil."
     (save-match-data
       (when (string-match "\\`\\(?:\\(?:\\(?1:[0-9]*\\)'h\\)\\|0x\\)?\\(?2:[0-9a-fA-F_]+\\)\\'" hex)
         (let ((num-bits-str (match-string-no-properties 1 hex)))
-          (setq hex-str (replace-regexp-in-string
-                         "_" ""
-                         (match-string-no-properties 2 hex)))
+          (setq hex-str (downcase
+                         (replace-regexp-in-string
+                          "_" ""
+                          (match-string-no-properties 2 hex))))
           ;; (message "dbg match 1 : %S" num-bits-str)
           ;; (message "dbg match 2 : %S" hex-str)
           (when (stringp num-bits-str)
@@ -123,7 +124,10 @@ If a hexadecimal string cannot be parsed, return nil."
 Optional argument NUM-BITS is used to determine the sign of the
 decimal number and if the hex string can be represented by those
 many bits.  If this argument is not specified, it defaults to
-16."
+16.
+
+Returns a cons (NUM-BITS . DEC-VALUE) where NUM-BITS is the
+number of bits, and DEC-VALUE is the converted decimal number."
   (unless (stringp inp-hex)
     (error (format "Input %S is not an string" inp-hex)))
   (let* ((parsed-hex (basejump--parse-hex inp-hex))
@@ -146,7 +150,7 @@ many bits.  If this argument is not specified, it defaults to
         ;; (message "dbg unsigned-val : %S" unsigned-val)
         ;; (message "dbg negativep : %S" negativep)
         ;; (message "dbg dec : %S" dec)
-        dec))))
+        `(,num-bits . ,dec)))))
 
 (defun basejump-hex-to-dec (hex &optional num-bits beg end)
   "Convert HEX string to a signed decimal number.
@@ -160,7 +164,7 @@ beginning and end of the selected region.
 Else, prompt the user to enter a hex number in the
 minibuffer. The decimal output is printed in the echo area.
 
-When called non-interactively, return the hex string."
+When called non-interactively, returns the decimal value."
   (interactive
    (if (use-region-p)
        (list nil nil (region-beginning) (region-end))
@@ -172,14 +176,15 @@ When called non-interactively, return the hex string."
         (narrow-to-region beg end)
         (goto-char beg)
         (while (re-search-forward "\\(\\([0-9]*'h\\)\\|0x\\)\\([0-9a-fA-F_]+\\)" nil :noerror)
-          (let ((dec (basejump--hex-to-dec-core (match-string-no-properties 0))))
+          (let ((dec (cdr (basejump--hex-to-dec-core (match-string-no-properties 0)))))
             (replace-match (number-to-string dec)))))))
    ((and (interactive-p) hex) ;Fn called interactively without selecting a region
-    (message "%s"
-             (format "hex %d'h%s -> %s"
-                     num-bits hex (basejump--hex-to-dec-core hex num-bits))))
+    (let* ((num-bits-dec (basejump--hex-to-dec-core hex))
+           (num-bits (car num-bits-dec))
+           (dec-val (cdr num-bits-dec)))
+      (message "%s" (format "hex %d'h%s -> %s" num-bits hex dec-val))))
    (hex                                 ;Fn called non-interactively
-    (basejump--hex-to-dec-core hex num-bits))
+    (cdr (basejump--hex-to-dec-core hex num-bits)))
    (t                        ;not interactive, no region, hex is nil
     (error "Unsupported scenario"))))
 
