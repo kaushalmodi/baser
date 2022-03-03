@@ -125,6 +125,14 @@
       (push (basejump-hex-to-dec hex num-bits) out))
     (should (equal ref (nreverse out)))))
 
+(ert-deftest test-hex-to-dec-underscores ()
+  (let ((inp '("16'hab_cd" "'hffff_fffe" "24'h21_12_83"))
+        (ref '(    -21555            -2        2167427))
+        out)
+    (dolist (hex inp)
+      (push (basejump-hex-to-dec hex) out))
+    (should (equal ref (nreverse out)))))
+
 (ert-deftest test-hex-to-dec-inp-not-string ()
   (let ((inp '(1 1.1 'x)))
     (dolist (i inp)

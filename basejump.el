@@ -105,9 +105,11 @@ many bits.  If this argument is not specified, it defaults to
     ;; Override the `hex' and `num-bits' values with the parsed
     ;; versions.
     (save-match-data
-      (string-match "\\(?:\\(?:\\(?1:[0-9]*\\)'h\\)\\|0x\\)?\\(?2:[0-9a-fA-F]+\\)" hex)
+      (string-match "\\(?:\\(?:\\(?1:[0-9]*\\)'h\\)\\|0x\\)?\\(?2:[0-9a-fA-F_]+\\)" hex)
       (let ((num-bits-str (match-string-no-properties 1 hex))
-            (hex-str (match-string-no-properties 2 hex)))
+            (hex-str (replace-regexp-in-string
+                      "_" ""
+                      (match-string-no-properties 2 hex))))
         ;; (message "dbg match 1 : %S" num-bits-str)
         ;; (message "dbg match 2 : %S" hex-str)
         (when (stringp num-bits-str)
@@ -155,7 +157,7 @@ When called non-interactively, return the hex string."
       (save-restriction
         (narrow-to-region beg end)
         (goto-char beg)
-        (while (re-search-forward "\\(\\([0-9]*'h\\)\\|0x\\)\\([0-9a-fA-F]+\\)" nil :noerror)
+        (while (re-search-forward "\\(\\([0-9]*'h\\)\\|0x\\)\\([0-9a-fA-F_]+\\)" nil :noerror)
           (let ((dec (basejump-hex-to-dec--core (match-string-no-properties 0))))
             (replace-match (number-to-string dec)))))))
    ((and (interactive-p) hex) ;Fn called interactively without selecting a region
