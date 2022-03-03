@@ -188,6 +188,78 @@ When called non-interactively, returns the decimal value."
    (t                        ;not interactive, no region, hex is nil
     (error "Unsupported scenario"))))
 
+;;;; Hexadecimal <-> Binary
+(defun basejump--hex-to-bin-core (inp-hex)
+  "Convert hex number string INP-HEX to binary.
+
+Returns a cons (NUM-BITS . BIN-STR) where NUM-BITS is the number
+of bits, and BIN-STR is the binary representation."
+  (let* ((parsed-hex (basejump--parse-hex inp-hex))
+         (num-bits (car parsed-hex))
+         (hex (cdr parsed-hex))
+         (bin ""))
+    (when (null hex)
+      (error "%s" (format "Input %s is not a valid hex string" inp-hex)))
+    (dolist (h (split-string hex ""))
+      (when (not (string= "" h))
+        (setq bin (concat bin
+                          (cond
+                           ((string= "0" h) "0000")
+                           ((string= "1" h) "0001")
+                           ((string= "2" h) "0010")
+                           ((string= "3" h) "0011")
+                           ((string= "4" h) "0100")
+                           ((string= "5" h) "0101")
+                           ((string= "6" h) "0110")
+                           ((string= "7" h) "0111")
+                           ((string= "8" h) "1000")
+                           ((string= "9" h) "1001")
+                           ((string= "a" h) "1010")
+                           ((string= "b" h) "1011")
+                           ((string= "c" h) "1100")
+                           ((string= "d" h) "1101")
+                           ((string= "e" h) "1110")
+                           ((string= "f" h) "1111"))
+                          "_"))))
+    (setq bin (string-remove-suffix "_" bin))
+    `(,num-bits . ,bin)))
+
+(defun basejump-hex-to-bin (hex &optional beg end)
+  "Convert HEX string to binary.
+
+If a region is selected, convert all hex strings in the selected
+region in the buffer to binary.  BEG and END are auto-set to the
+beginning and end of the selected region.
+
+Else, prompt the user to enter a hex number in the
+minibuffer. The binary output is printed in the echo area.
+
+When called non-interactively, return the binary string."
+  (interactive
+   (if (use-region-p)
+       (list nil nil (region-beginning) (region-end))
+     (list (read-string "Enter a hex number: "))))
+  (cond
+   ((and (interactive-p) beg end) ;Fn called interactively after selecting a region
+    (save-excursion
+      (save-restriction
+        (narrow-to-region beg end)
+        (goto-char beg)
+        (while (re-search-forward "\\(\\([0-9]*'h\\)\\|0x\\)\\([0-9a-fA-F_]+\\)" nil :noerror)
+          (let ((bin (cdr (basejump--hex-to-bin-core (match-string-no-properties 0)))))
+            (replace-match bin))))))
+   ((and (interactive-p) hex) ;Fn called interactively without selecting a region
+    (let* ((num-bits-bin (basejump--hex-to-bin-core hex))
+           (num-bits (car num-bits-bin))
+           (bin-str (cdr num-bits-bin)))
+      (if (numberp num-bits)
+          (message "%s" (format "hex %s -> %s (%d bit binary)" hex bin-str num-bits))
+        (message "%s" (format "hex %s -> %s (binary)" hex bin-str)))))
+   (hex                                 ;Fn called non-interactively
+    (cdr (basejump--hex-to-bin-core hex num-bits)))
+   (t                        ;not interactive, no region, hex is nil
+    (error "Unsupported scenario"))))
+
 
 (provide 'basejump)
 
