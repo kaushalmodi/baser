@@ -182,7 +182,7 @@ When called non-interactively, returns the decimal value."
     (let* ((num-bits-dec (basejump--hex-to-dec-core hex))
            (num-bits (car num-bits-dec))
            (dec-val (cdr num-bits-dec)))
-      (message "%s" (format "hex %d'h%s -> %s" num-bits hex dec-val))))
+      (message "%s" (format "hex %s -> %s (%d bit decimal)" hex dec-val num-bits))))
    (hex                                 ;Fn called non-interactively
     (cdr (basejump--hex-to-dec-core hex num-bits)))
    (t                        ;not interactive, no region, hex is nil
