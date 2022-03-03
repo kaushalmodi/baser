@@ -1,4 +1,4 @@
-;;; all_tests.el --- Tests for basejump.el                   -*- lexical-binding: t; -*-
+;; -*- lexical-binding: t; -*-
 
 ;; Authors: Kaushal Modi <kaushal.modi@gmail.com>
 
@@ -17,11 +17,25 @@
 ;; You should have received a copy of the GNU General Public License
 ;; along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+;;; Commentary:
+
+;; Test conversions between hexadecimal and binary.
+
 ;;; Code:
 
-(setq load-prefer-newer t)
+;;;; Hexadecimal -> Binary
+(ert-deftest test-hex-to-bin ()
+  (let ((inp '(   "a"  "0xb"  "'hc" "4'hd" "8'he"))
+        (ref '("1010" "1011" "1100" "1101" "1110"))
+        out)
+    (dolist (hex inp)
+      (push (basejump-hex-to-bin hex) out))
+    (should (equal ref (nreverse out)))))
 
-(require 'basejump)
+(ert-deftest test-hex-to-bin-invalid-hex-inp ()
+  (let ((inp '("32'1234_abcd" "a&b" "'habcdefghi")))
+    (dolist (hex inp)
+      (should-error (basejump-hex-to-bin hex)))))
 
-(require 'tdec_hex)
-(require 'thex_bin)
+
+(provide 'thex_bin)

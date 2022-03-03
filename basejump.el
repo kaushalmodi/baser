@@ -256,7 +256,7 @@ When called non-interactively, return the binary string."
           (message "%s" (format "hex %s -> %s (%d bit binary)" hex bin-str num-bits))
         (message "%s" (format "hex %s -> %s (binary)" hex bin-str)))))
    (hex                                 ;Fn called non-interactively
-    (cdr (basejump--hex-to-bin-core hex num-bits)))
+    (cdr (basejump--hex-to-bin-core hex)))
    (t                        ;not interactive, no region, hex is nil
     (error "Unsupported scenario"))))
 
