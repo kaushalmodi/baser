@@ -60,8 +60,8 @@ If a region is selected, convert all integers in the selected
 region in the buffer to hex.  BEG and END are auto-set to the
 beginning and end of the selected region.
 
-Else, prompt the user to enter the integer in minibuffer. The hex
-output is printed in the echo area.
+Else, prompt the user to enter the integer in the minibuffer. The
+hex output is printed in the echo area.
 
 When called non-interactively, return the hex string.
 
@@ -74,10 +74,14 @@ bytes in the output hex string."
             (read-string "Enter an integer in decimal: ")))))
   (cond
    ((and (interactive-p) beg end) ;Fn called interactively after selecting a region
-    (while (re-search-forward "\\-?[0-9]+\\b" nil :noerror)
-      (let ((hex (basejump-dec-to-hex--core
-                  (string-to-number (match-string-no-properties 0)))))
-        (replace-match hex))))
+    (save-excursion
+      (save-restriction
+        (narrow-to-region beg end)
+        (goto-char beg)
+        (while (re-search-forward "\\-?[0-9]+\\b" nil :noerror)
+          (let ((hex (basejump-dec-to-hex--core
+                      (string-to-number (match-string-no-properties 0)))))
+            (replace-match hex))))))
    ((and (interactive-p) dec) ;Fn called interactively without selecting a region
     (message "dec %d -> %s" dec (basejump-dec-to-hex--core dec)))
    (dec                                 ;Fn called non-interactively
