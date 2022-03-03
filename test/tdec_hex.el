@@ -150,5 +150,10 @@
     (dolist (hex inp)
       (should-error (basejump-hex-to-dec hex num-bits)))))
 
+(ert-deftest test-hex-to-dec-invalid-hex-inp ()
+  (let ((inp '("32'1234_abcd" "a&b" "'habcdefghi")))
+    (dolist (hex inp)
+      (should-error (basejump-hex-to-dec hex)))))
+
 
 (provide 'tdec_hex)

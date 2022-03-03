@@ -34,7 +34,7 @@
 ;;; Functions
 
 ;;;; Decimal <-> Hexadecimal
-(defun basejump-dec-to-hex--core (dec &optional min-bytes)
+(defun basejump--dec-to-hex-core (dec &optional min-bytes)
   "Convert signed decimal number DEC to hex.
 
 DEC is a positive or negative integer.
@@ -79,50 +79,64 @@ bytes in the output hex string."
         (narrow-to-region beg end)
         (goto-char beg)
         (while (re-search-forward "\\-?[0-9]+\\b" nil :noerror)
-          (let ((hex (basejump-dec-to-hex--core
+          (let ((hex (basejump--dec-to-hex-core
                       (string-to-number (match-string-no-properties 0)))))
             (replace-match hex))))))
    ((and (interactive-p) dec) ;Fn called interactively without selecting a region
-    (message "dec %d -> %s" dec (basejump-dec-to-hex--core dec)))
+    (message "dec %d -> %s" dec (basejump--dec-to-hex-core dec)))
    (dec                                 ;Fn called non-interactively
-    (basejump-dec-to-hex--core dec min-bytes))
+    (basejump--dec-to-hex-core dec min-bytes))
    (t                          ;not interactive, no region, dec is nil
     (error "Unsupported scenario"))))
 
-(defun basejump-hex-to-dec--core (hex &optional num-bits)
-  "Convert HEX string to a signed decimal number.
+(defun basejump--parse-hex (hex)
+  "Parse the input HEX string.
+
+Return a cons (NUM-BITS . HEX-STR) where NUM-BITS is the number
+of bits if parsed from HEX, and HEX-STR is just the hex string
+portion without any prefixes or underscores.
+
+If the HEX string has the \"\\='h\" notation (e.g. \"\\='habcd\"),
+but without the number of bits, set NUM-BITS to 32.
+
+If a hexadecimal string cannot be parsed, return nil."
+  (let (num-bits hex-str)
+    (save-match-data
+      (when (string-match "\\`\\(?:\\(?:\\(?1:[0-9]*\\)'h\\)\\|0x\\)?\\(?2:[0-9a-fA-F_]+\\)\\'" hex)
+        (let ((num-bits-str (match-string-no-properties 1 hex)))
+          (setq hex-str (replace-regexp-in-string
+                         "_" ""
+                         (match-string-no-properties 2 hex)))
+          ;; (message "dbg match 1 : %S" num-bits-str)
+          ;; (message "dbg match 2 : %S" hex-str)
+          (when (stringp num-bits-str)
+            (if (string= "" num-bits-str)
+                (setq num-bits 32)
+              (setq num-bits (string-to-number num-bits-str)))))))
+    ;; (message "dbg num-bits : %S" num-bits)
+    ;; (message "dbg hex-str : %S" hex-str)
+    `(,num-bits . ,hex-str)))
+
+(defun basejump--hex-to-dec-core (inp-hex &optional num-bits)
+  "Convert INP-HEX string to a signed decimal number.
 
 Optional argument NUM-BITS is used to determine the sign of the
 decimal number and if the hex string can be represented by those
 many bits.  If this argument is not specified, it defaults to
 16."
-  (let ((hex hex)
-        (num-bits num-bits))
-    ;; (message "dbg input hex : %S" hex)
-    ;; (message "dbg input num-bits : %S" num-bits)
-    (unless (stringp hex)
-      (error (format "Input %S is not an string" hex)))
-    ;; Override the `hex' and `num-bits' values with the parsed
-    ;; versions.
-    (save-match-data
-      (string-match "\\(?:\\(?:\\(?1:[0-9]*\\)'h\\)\\|0x\\)?\\(?2:[0-9a-fA-F_]+\\)" hex)
-      (let ((num-bits-str (match-string-no-properties 1 hex))
-            (hex-str (replace-regexp-in-string
-                      "_" ""
-                      (match-string-no-properties 2 hex))))
-        ;; (message "dbg match 1 : %S" num-bits-str)
-        ;; (message "dbg match 2 : %S" hex-str)
-        (when (stringp num-bits-str)
-          (if (string= "" num-bits-str)
-              (setq num-bits 32)
-            (setq num-bits (string-to-number num-bits-str))))
-        (setq hex hex-str)))
+  (unless (stringp inp-hex)
+    (error (format "Input %S is not an string" inp-hex)))
+  (let* ((parsed-hex (basejump--parse-hex inp-hex))
+         (num-bits (or (car parsed-hex) num-bits))
+         (hex (cdr parsed-hex)))
+    (when (null hex)
+      (error "%s" (format "Input %s is not a valid hex string" inp-hex)))
     (setq num-bits (or num-bits 16)) ;Default value of `num-bits' if not set or parsed from `hex' string
     (let* ((unsigned-max-pos (1- (expt 2 num-bits)))
            (signed-max-pos (lsh unsigned-max-pos -1))
            (unsigned-val (string-to-number hex 16)))
       (when (> unsigned-val unsigned-max-pos)
-        (error (format "%s cannot be represented as a %0d bit hex value" hex num-bits)))
+        (error "%s" (format "%s cannot be represented as a %0d bit hex value" hex num-bits)))
       (let* ((negativep (> unsigned-val signed-max-pos))
              (dec (if negativep
                       (- unsigned-val (1+ unsigned-max-pos))
@@ -158,14 +172,14 @@ When called non-interactively, return the hex string."
         (narrow-to-region beg end)
         (goto-char beg)
         (while (re-search-forward "\\(\\([0-9]*'h\\)\\|0x\\)\\([0-9a-fA-F_]+\\)" nil :noerror)
-          (let ((dec (basejump-hex-to-dec--core (match-string-no-properties 0))))
+          (let ((dec (basejump--hex-to-dec-core (match-string-no-properties 0))))
             (replace-match (number-to-string dec)))))))
    ((and (interactive-p) hex) ;Fn called interactively without selecting a region
     (message "%s"
              (format "hex %d'h%s -> %s"
-                     num-bits hex (basejump-hex-to-dec--core hex num-bits))))
+                     num-bits hex (basejump--hex-to-dec-core hex num-bits))))
    (hex                                 ;Fn called non-interactively
-    (basejump-hex-to-dec--core hex num-bits))
+    (basejump--hex-to-dec-core hex num-bits))
    (t                        ;not interactive, no region, hex is nil
     (error "Unsupported scenario"))))
 
