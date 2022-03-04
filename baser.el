@@ -39,9 +39,9 @@
 (define-error 'baser-unreachable "Reached an unreachable scenario")
 
 
-
 ;;; Functions
 
+
 ;;;; Decimal <-> Hexadecimal
 (defun baser--parse-dec (dec)
   "Parse the input DEC string.
@@ -85,25 +85,22 @@ of bits, and HEX-STR is the converted hexadecimal string."
   (let* ((parsed-dec (baser--parse-dec dec-str))
          (num-bits (car parsed-dec))
          (dec (cdr parsed-dec))
-         (bytes (max
-                 2 ;minimum number of required bytes
-                 (ceiling (/ (/ (log (1+ (abs dec))) (log 2)) 8.0))))
-         (hex-fmt (format "%%0%dx" (* 2 bytes)))
          hex-str)
     ;; Default value of `num-bits' if not parsed from `dec-str'.
     (setq num-bits (or num-bits baser-default-num-bits))
-    (let* ((unsigned-max-pos (1- (expt 2 num-bits)))
+    (let* ((num-nib (ceiling (/ num-bits 4.0)))
+           (hex-fmt (format "%%0%dx" num-nib))
+           (unsigned-max-pos (1- (expt 2 num-bits)))
            (signed-max-pos (lsh unsigned-max-pos -1))
            (signed-max-neg (- (1+ signed-max-pos)))
            (overflowp (or (and (>= dec 0) (> dec signed-max-pos))
                           (and (< dec 0) (< dec signed-max-neg)))))
       (when overflowp
         (signal 'baser-number-too-large
-                (format "%d cannot be represented using %d bits" dec num-bits))))
-    (when (< dec 0)
-      (let ((max (expt 2 (* 8 bytes))))
-        (setq dec (- max (- dec)))))
-    (setq hex-str (format hex-fmt dec))
+                (format "%d cannot be represented using %d bits" dec num-bits)))
+      (when (< dec 0)
+        (setq dec (- (1+ unsigned-max-pos) (- dec))))
+      (setq hex-str (format hex-fmt dec)))
     `(,num-bits . ,hex-str)))
 
 (defun baser-dec-to-hex (dec &optional beg end)
@@ -247,6 +244,8 @@ When called non-interactively, returns the decimal value."
    (t                        ;not interactive, no region, hex is nil
     (signal 'baser-unreachable "Unsupported scenario"))))
 
+
+
 ;;;; Hexadecimal <-> Binary
 (defun baser--hex-to-bin-core (inp-hex)
   "Convert hex number string INP-HEX to binary.

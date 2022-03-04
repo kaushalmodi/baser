@@ -42,7 +42,7 @@
 
 (ert-deftest test-dec-str-to-hex ()
   (let ((inp '("32'd65535" "-8'd1"))
-        (ref '(     "ffff"  "ffff"))
+        (ref '( "0000ffff"    "ff"))
         out)
     (dolist (dec inp)
       (push (baser-dec-to-hex dec) out))
