@@ -86,8 +86,8 @@ of bits, and HEX-STR is the converted hexadecimal string."
          (dec (cdr parsed-dec))
          (bytes (max
                  2 ;minimum number of required bytes
-                 (ceiling (/ (/ (log (1+ (abs dec))) (log 2)) 8))))
-         (hex-fmt (format "%%0%0dx" (* 2 bytes)))
+                 (ceiling (/ (/ (log (1+ (abs dec))) (log 2)) 8.0))))
+         (hex-fmt (format "%%0%dx" (* 2 bytes)))
          hex-str)
     ;; Default value of `num-bits' if not parsed from `dec-str'.
     (setq num-bits (or num-bits baser-default-num-bits))
@@ -98,7 +98,7 @@ of bits, and HEX-STR is the converted hexadecimal string."
                           (and (< dec 0) (< dec signed-max-neg)))))
       (when overflowp
         (signal 'baser-number-too-large
-                (format "%d cannot be represented using %0d bits" dec num-bits))))
+                (format "%d cannot be represented using %d bits" dec num-bits))))
     (when (< dec 0)
       (let ((max (expt 2 (* 8 bytes))))
         (setq dec (- max (- dec)))))
@@ -198,7 +198,7 @@ number of bits, and DEC-VALUE is the converted decimal number."
            (unsigned-val (string-to-number hex 16)))
       (when (> unsigned-val unsigned-max-pos)
         (signal 'baser-number-too-large
-                (format "%s cannot be represented as a %0d bit hex value" hex num-bits)))
+                (format "%s cannot be represented as a %d bit hex value" hex num-bits)))
       (let* ((negativep (> unsigned-val signed-max-pos))
              (dec (if negativep
                       (- unsigned-val (1+ unsigned-max-pos))
