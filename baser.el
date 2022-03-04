@@ -184,7 +184,7 @@ number of bits, and DEC-VALUE is the converted decimal number."
   (unless (stringp inp-hex)
     (error (format "Input %S is not an string" inp-hex)))
   (let* ((parsed-hex (baser--parse-hex inp-hex))
-         (num-bits (or (car parsed-hex) num-bits))
+         (num-bits (or (car parsed-hex) num-bits)) ;Fall back to `num-bits' from arg
          (hex (cdr parsed-hex)))
     (when (null hex)
       (error "%s" (format "Input %s is not a valid hex string" inp-hex)))
@@ -345,10 +345,9 @@ If a binary string cannot be parsed, return nil."
                 (setq num-bits 32)
               (setq num-bits (string-to-number num-bits-str))))
           ;; e.g. 4'b1101 = 1*(2^0) + 0*(2^1) + 1*(2^2) + 1*(2^3) = 13 (decimal)
-          (dolist (b (nreverse (split-string bin-str "")))
-            (when (not (string= "" b))
-              (cl-incf dec-val (* (string-to-number b) (expt 2 idx)))
-              (cl-incf idx)))
+          (dolist (b (reverse (split-string bin-str "" :omit-nulls)))
+            (cl-incf dec-val (* (string-to-number b) (expt 2 idx)))
+            (cl-incf idx))
           `(,num-bits . ,dec-val))))))
 
 (defun baser--bin-to-hex-core (bin-str)
