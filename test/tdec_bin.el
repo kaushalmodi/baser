@@ -24,17 +24,25 @@
 ;;; Code:
 
 ;;;; Decimal -> Binary
-(ert-deftest test-pos-to-bin ()
-  (let ((inp '(                   0                 12345 "4'd7" "3'd3"    "8'd100"))
-        (ref '("0000_0000_0000_0000" "0011_0000_0011_1001" "0111" "0011" "0110_0100"))
+(ert-deftest test-pos-dec-to-bin ()
+  (let ((inp '(                   0                 12345  "4'd7" "3'd3"    "8'd100"))
+        (ref '("0000_0000_0000_0000" "0011_0000_0011_1001" "0111"  "011" "0110_0100"))
         out)
     (dolist (dec inp)
       (push (baser-dec-to-bin dec) out))
     (should (equal ref (nreverse out)))))
 
-(ert-deftest test-neg-to-bin ()
+(ert-deftest test-neg-dec-to-bin ()
   (let ((inp '(                  -1  "-4'd2"     "-8'd3"))
         (ref '("1111_1111_1111_1111"  "1110" "1111_1101"))
+        out)
+    (dolist (dec inp)
+      (push (baser-dec-to-bin dec) out))
+    (should (equal ref (nreverse out)))))
+
+(ert-deftest test-dec-to-bin-large-number ()
+  (let ((inp '("-68'd24513674335241209712"))
+        (ref '("1110_1010_1011_1100_1101_1110_1111_0001_0010_0011_0100_0101_0110_0111_1000_1001_0000"))
         out)
     (dolist (dec inp)
       (push (baser-dec-to-bin dec) out))

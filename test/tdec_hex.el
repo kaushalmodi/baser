@@ -24,7 +24,7 @@
 ;;; Code:
 
 ;;;; Decimal -> Hexadecimal
-(ert-deftest test-pos-to-hex ()
+(ert-deftest test-pos-dec-to-hex ()
   (let ((inp '(    0     10    100   1023   1024   4095   4096  32767))
         (ref '("0000" "000a" "0064" "03ff" "0400" "0fff" "1000" "7fff"))
         out)
@@ -32,7 +32,7 @@
       (push (baser-dec-to-hex dec) out))
     (should (equal ref (nreverse out)))))
 
-(ert-deftest test-neg-to-hex ()
+(ert-deftest test-neg-dec-to-hex ()
   (let ((inp '(   -1     -2  -1023  -1024))
         (ref '("ffff" "fffe" "fc01" "fc00"))
         out)
@@ -48,7 +48,7 @@
       (push (baser-dec-to-hex dec) out))
     (should (equal ref (nreverse out)))))
 
-(ert-deftest test-pos-to-hex-inp-not-int ()
+(ert-deftest test-pos-dec-to-hex-inp-not-int ()
   (let ((inp '("a" 1.1 'x)))
     (dolist (i inp)
       (should-error (baser-dec-to-hex i)))))

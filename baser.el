@@ -247,39 +247,50 @@ When called non-interactively, returns the decimal value."
 
 
 ;;;; Hexadecimal <-> Binary
-(defun baser--hex-to-bin-core (inp-hex)
-  "Convert hex number string INP-HEX to binary.
+(defun baser--hex-to-bin-core (hex-str &optional num-bits)
+  "Convert hex number string HEX-STR to binary.
+
+Optional argument NUM-BITS is used to determine if the width of
+the output binary string.  If this argument is not specified, and
+if the `num-bits' cannot be parsed from HEX-STR, it defaults to
+`baser-default-num-bits'.
 
 Returns a cons (NUM-BITS . BIN-STR) where NUM-BITS is the number
 of bits, and BIN-STR is the binary representation."
-  (let* ((parsed-hex (baser--parse-hex inp-hex))
-         (num-bits (car parsed-hex))
+  (let* ((parsed-hex (baser--parse-hex hex-str))
+         (num-bits (or (car parsed-hex) num-bits)) ;Fall back to `num-bits' from arg
          (hex (cdr parsed-hex))
          (bin ""))
     (when (null hex)
-      (error "%s" (format "Input %s is not a valid hex string" inp-hex)))
-    (dolist (h (split-string hex ""))
-      (when (not (string= "" h))
-        (setq bin (concat bin
-                          (cl-ecase (string-to-char h)
-                            (?0 "0000")
-                            (?1 "0001")
-                            (?2 "0010")
-                            (?3 "0011")
-                            (?4 "0100")
-                            (?5 "0101")
-                            (?6 "0110")
-                            (?7 "0111")
-                            (?8 "1000")
-                            (?9 "1001")
-                            (?a "1010")
-                            (?b "1011")
-                            (?c "1100")
-                            (?d "1101")
-                            (?e "1110")
-                            (?f "1111"))
-                          "_"))))
-    (setq bin (string-remove-suffix "_" bin))
+      (error "%s" (format "Input %s is not a valid hex string" hex-str)))
+    ;; Default value of `num-bits' if not set or parsed from `hex'
+    ;; string.
+    (setq num-bits (or num-bits baser-default-num-bits))
+    (dolist (h (split-string hex "" :omit-nulls))
+      (setq bin (concat bin
+                        (cl-ecase (string-to-char h)
+                          (?0 "0000")
+                          (?1 "0001")
+                          (?2 "0010")
+                          (?3 "0011")
+                          (?4 "0100")
+                          (?5 "0101")
+                          (?6 "0110")
+                          (?7 "0111")
+                          (?8 "1000")
+                          (?9 "1001")
+                          (?a "1010")
+                          (?b "1011")
+                          (?c "1100")
+                          (?d "1101")
+                          (?e "1110")
+                          (?f "1111")))))
+    (when (> (length bin) num-bits) ;Trim extra bits from the MSB side
+      (setq bin (reverse (substring (reverse bin) 0 num-bits))))
+    ;; Add the "_" nibble separately for readability.
+    (setq bin (string-remove-prefix
+               "_"
+               (reverse (replace-regexp-in-string ".\\{4\\}" "\\&_" (reverse bin)))))
     `(,num-bits . ,bin)))
 
 (defun baser-hex-to-bin (hex &optional beg end)
@@ -446,7 +457,7 @@ When called non-interactively, return the binary string."
            (num-bits-hex (baser--dec-to-hex-core dec-str))
            (num-bits (car num-bits-hex))
            (hex-str (cdr num-bits-hex))
-           (bin-str (cdr (baser--hex-to-bin-core hex-str))))
+           (bin-str (cdr (baser--hex-to-bin-core hex-str num-bits))))
       (if (interactive-p) ;Fn called interactively without selecting a region
           (message "%s" (format "dec %s -> %s (%d bit binary)" dec-str bin-str num-bits)))
       bin-str))                ;Fn called non-interactively

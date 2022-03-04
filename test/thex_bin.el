@@ -25,8 +25,16 @@
 
 ;;;; Hexadecimal -> Binary
 (ert-deftest test-hex-to-bin ()
-  (let ((inp '(   "a"  "0xb"  "'hc" "4'hd" "8'he"))
-        (ref '("1010" "1011" "1100" "1101" "1110"))
+  (let ((inp '(   "a"  "0xb"  "'hc" "4'hd" "8'he"  "5'hfa"   "6'hff"))
+        (ref '("1010" "1011" "1100" "1101" "1110" "1_1010" "11_1111"))
+        out)
+    (dolist (hex inp)
+      (push (baser-hex-to-bin hex) out))
+    (should (equal ref (nreverse out)))))
+
+(ert-deftest test-hex-to-bin-large-number ()
+  (let ((inp '(                                                           "68'he_abcd_ef12_3456_7890"))
+        (ref '("1110_1010_1011_1100_1101_1110_1111_0001_0010_0011_0100_0101_0110_0111_1000_1001_0000"))
         out)
     (dolist (hex inp)
       (push (baser-hex-to-bin hex) out))
