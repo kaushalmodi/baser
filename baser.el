@@ -96,7 +96,7 @@ If a region is selected, convert all integers in the selected
 region in the buffer to hex.  BEG and END are auto-set to the
 beginning and end of the selected region.
 
-Else, prompt the user to enter the integer in the minibuffer. The
+Else, prompt the user to enter the integer in the minibuffer.  The
 hex output is printed in the echo area.
 
 When called non-interactively, return the hex string."
@@ -199,7 +199,7 @@ region in the buffer to decimal.  BEG and END are auto-set to the
 beginning and end of the selected region.
 
 Else, prompt the user to enter a hex number in the
-minibuffer. The decimal output is printed in the echo area.
+minibuffer.  The decimal output is printed in the echo area.
 
 When called non-interactively, returns the decimal value."
   (interactive
@@ -269,7 +269,7 @@ region in the buffer to binary.  BEG and END are auto-set to the
 beginning and end of the selected region.
 
 Else, prompt the user to enter a hex number in the
-minibuffer. The binary output is printed in the echo area.
+minibuffer.  The binary output is printed in the echo area.
 
 When called non-interactively, return the binary string."
   (interactive
