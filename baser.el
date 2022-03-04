@@ -35,6 +35,7 @@
   :type 'integer)
 
 (define-error 'baser-number-too-large "Number too large to fit in the number of bits")
+(define-error 'baser-unreachable "Reached an unreachable scenario")
 
 
 
@@ -142,7 +143,7 @@ When called non-interactively, return the hex string."
      (dec                               ;Fn called non-interactively
       hex)
      (t                          ;not interactive, no region, dec is nil
-      (error "Unsupported scenario")))))
+      (signal 'baser-unreachable "Unsupported scenario")))))
 
 (defun baser--parse-hex (hex)
   "Parse the input HEX string.
@@ -244,7 +245,7 @@ When called non-interactively, returns the decimal value."
    (hex                                 ;Fn called non-interactively
     (cdr (baser--hex-to-dec-core hex num-bits)))
    (t                        ;not interactive, no region, hex is nil
-    (error "Unsupported scenario"))))
+    (signal 'baser-unreachable "Unsupported scenario"))))
 
 ;;;; Hexadecimal <-> Binary
 (defun baser--hex-to-bin-core (inp-hex)
@@ -277,7 +278,9 @@ of bits, and BIN-STR is the binary representation."
                            ((string= "c" h) "1100")
                            ((string= "d" h) "1101")
                            ((string= "e" h) "1110")
-                           ((string= "f" h) "1111"))
+                           ((string= "f" h) "1111")
+                           (t
+                            (signal 'baser-unreachable "Unsupported scenario")))
                           "_"))))
     (setq bin (string-remove-suffix "_" bin))
     `(,num-bits . ,bin)))
@@ -316,7 +319,7 @@ When called non-interactively, return the binary string."
    (hex                                 ;Fn called non-interactively
     (cdr (baser--hex-to-bin-core hex)))
    (t                        ;not interactive, no region, hex is nil
-    (error "Unsupported scenario"))))
+    (signal 'baser-unreachable "Unsupported scenario"))))
 
 
 (provide 'baser)
