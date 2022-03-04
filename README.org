@@ -32,6 +32,9 @@ expression of the conversion function.
   (baser-hex-to-bin "0xabc")   ;; => "1010_1011_1100"
 
   (baser-bin-to-hex "4'b1101") ;; => "d"
+
+  (baser-dec-to-bin "4'd3")    ;; => "0011"
+  (baser-dec-to-bin "-8'd3")   ;; => "1111_1101"
   #+end_src
 * Conversions
 |-----------------------+-------------+--------------------|
@@ -41,6 +44,7 @@ expression of the conversion function.
 | 16 (string)           | 10 (number) | ~baser-hex-to-dec~ |
 | 16 (string)           | 2 (string)  | ~baser-hex-to-bin~ |
 | 2 (string)            | 16 (string) | ~baser-bin-to-hex~ |
+| 10 (number or string) | 2 (string)  | ~baser-dec-to-bin~ |
 |-----------------------+-------------+--------------------|
 * Development
 ** Running Tests

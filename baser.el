@@ -413,6 +413,50 @@ When called non-interactively, return the hex string."
     (signal 'baser-unreachable "Unsupported scenario"))))
 
 
+
+;;;; Decimal <-> Binary
+(defun baser-dec-to-bin (dec &optional beg end)
+  "Convert a decimal number DEC to bin.
+
+DEC can a be number or a string representing a decimal number.
+
+If a region is selected, convert all integers in the selected
+region in the buffer to binary.  BEG and END are auto-set to the
+beginning and end of the selected region.
+
+Else, prompt the user to enter the number in the minibuffer.  The
+binary output is printed in the echo area.
+
+When called non-interactively, return the binary string."
+  (interactive
+   (if (use-region-p)
+       (list nil nil (region-beginning) (region-end))
+     (list (read-string "Enter a decimal number: "))))
+  (cond
+   ((and (interactive-p) beg end) ;Fn called interactively after selecting a region
+    (save-excursion
+      (save-restriction
+        (narrow-to-region beg end)
+        (goto-char beg)
+        (while (re-search-forward "\\-?\\(\\([0-9]*'d\\)\\|0x\\)*\\([0-9_]+\\)\\b" nil :noerror)
+          (let* ((hex-str (cdr (baser--dec-to-hex-core (match-string-no-properties 0))))
+                 (bin-str (cdr (baser--hex-to-bin-core hex-str))))
+            (replace-match bin-str))))))
+   (dec
+    (let* ((dec-str (if (stringp dec)
+                        dec
+                      (number-to-string dec)))
+           (num-bits-hex (baser--dec-to-hex-core dec-str))
+           (num-bits (car num-bits-hex))
+           (hex-str (cdr num-bits-hex))
+           (bin-str (cdr (baser--hex-to-bin-core hex-str))))
+      (if (interactive-p) ;Fn called interactively without selecting a region
+          (message "%s" (format "dec %s -> %s (%d bit binary)" dec-str bin-str num-bits)))
+      bin-str))                ;Fn called non-interactively
+   (t                          ;not interactive, no region, dec is nil
+    (signal 'baser-unreachable "Unsupported scenario"))))
+
+
 (provide 'baser)
 
 ;;; baser.el ends here

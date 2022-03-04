@@ -1,4 +1,4 @@
-;;; all_tests.el --- Tests for baser.el                   -*- lexical-binding: t; -*-
+;; -*- lexical-binding: t; -*-
 
 ;; Authors: Kaushal Modi <kaushal.modi@gmail.com>
 
@@ -17,12 +17,27 @@
 ;; You should have received a copy of the GNU General Public License
 ;; along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+;;; Commentary:
+
+;; Test conversions between decimal and binary.
+
 ;;; Code:
 
-(setq load-prefer-newer t)
+(ert-deftest test-pos-to-bin ()
+  (let ((inp '(                   0                 12345 "4'd7" "3'd3"    "8'd100"))
+        (ref '("0000_0000_0000_0000" "0011_0000_0011_1001" "0111" "0011" "0110_0100"))
+        out)
+    (dolist (dec inp)
+      (push (baser-dec-to-bin dec) out))
+    (should (equal ref (nreverse out)))))
 
-(require 'baser)
+(ert-deftest test-neg-to-bin ()
+  (let ((inp '(                  -1  "-4'd2"     "-8'd3"))
+        (ref '("1111_1111_1111_1111"  "1110" "1111_1101"))
+        out)
+    (dolist (dec inp)
+      (push (baser-dec-to-bin dec) out))
+    (should (equal ref (nreverse out)))))
 
-(require 'tdec_hex)
-(require 'thex_bin)
-(require 'tdec_bin)
+
+(provide 'tdec_bin)
