@@ -456,6 +456,42 @@ When called non-interactively, return the binary string."
    (t                          ;not interactive, no region, dec is nil
     (signal 'baser-unreachable "Unsupported scenario"))))
 
+(defun baser-bin-to-dec (bin &optional beg end)
+  "Convert BIN string to a signed decimal number.
+
+If a region is selected, convert all binary strings in the
+selected region in the buffer to decimal.  BEG and END are
+auto-set to the beginning and end of the selected region.
+
+Else, prompt the user to enter a binary string in the minibuffer.
+The decimal output is printed in the echo area.
+
+When called non-interactively, returns the decimal value."
+  (interactive
+   (if (use-region-p)
+       (list nil nil (region-beginning) (region-end))
+     (list (read-string "Enter a binary string: "))))
+  (cond
+   ((and (interactive-p) beg end) ;Fn called interactively after selecting a region
+    (save-excursion
+      (save-restriction
+        (narrow-to-region beg end)
+        (goto-char beg)
+        (while (re-search-forward "\\`\\(\\([0-9]*'b\\)\\|0b\\)?\\([01_]+\\)\\'" nil :noerror)
+          (let* ((hex-str (cdr (baser--bin-to-hex-core (match-string-no-properties 0))))
+                 (dec-val (cdr (baser--hex-to-dec-core hex-str))))
+            (replace-match (number-to-string dec-val)))))))
+   (bin
+    (let* ((num-bits-hex (baser--bin-to-hex-core bin))
+           (num-bits (car num-bits-hex))
+           (hex-str (cdr num-bits-hex))
+           (dec-val (cdr (baser--hex-to-dec-core hex-str num-bits))))
+      (if (interactive-p) ;Fn called interactively without selecting a region
+          (message "%s" (format "bin %s -> %s (%d bit decimal)" bin dec-val num-bits))
+        dec-val)))                        ;Fn called non-interactively
+   (t                          ;not interactive, no region, bin is nil
+    (signal 'baser-unreachable "Unsupported scenario"))))
+
 
 (provide 'baser)
 

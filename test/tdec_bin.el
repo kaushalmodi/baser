@@ -23,6 +23,7 @@
 
 ;;; Code:
 
+;;;; Decimal -> Binary
 (ert-deftest test-pos-to-bin ()
   (let ((inp '(                   0                 12345 "4'd7" "3'd3"    "8'd100"))
         (ref '("0000_0000_0000_0000" "0011_0000_0011_1001" "0111" "0011" "0110_0100"))
@@ -38,6 +39,22 @@
     (dolist (dec inp)
       (push (baser-dec-to-bin dec) out))
     (should (equal ref (nreverse out)))))
+
+
+;;;; Binary -> Decimal
+(ert-deftest test-bin-to-dec ()
+  (let ((inp '("1111" "4'b1111" "'b101" "0b1110" "2'b11" "3'b11"))
+        (ref '(   15        -1       5       14      -1       3))
+        out)
+    (dolist (bin inp)
+      (push (baser-bin-to-dec bin) out))
+    (should (equal ref (nreverse out)))))
+
+(ert-deftest test-bin-to-dec-inp-too-large-8-bits ()
+  (let ((inp '("2'b111")))
+    (dolist (bin inp)
+      (should-error (baser-bin-to-dec bin)
+                    :type 'baser-number-too-large))))
 
 
 (provide 'tdec_bin)
