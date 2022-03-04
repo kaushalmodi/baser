@@ -1,0 +1,38 @@
+#+title: Emacs-Lisp Library for converting to and from Decimal, Hexadecimal and Binary numbers
+#+author: Kaushal Modi
+
+* Installation
+Clone this repo, have ~baser.el~ in the ~load-path~ and ~(require
+'baser)~.
+* General Usage
+** Interactive
+Functions called using ~M-x~ or key bindings.
+*** With region selected
+1. Select a region in which you want to convert all the numbers.
+2. Run ~<conversion function>~ interactively.
+*** Without region selected
+1. Run ~<conversion function>~ interactively.
+2. Type the number you want to convert.
+** Non-interactive
+Call ~eval-expression~ (bound to ~M-:~ by default) and type the elisp
+expression of the conversion function.
+
+- Examples ::
+  #+begin_src emacs-lisp
+  (baser-dec-to-hex 100)       ;; => "0064"
+  (baser-hex-to-dec "0x100")   ;; => 256
+  (baser-hex-to-bin "0xabc")   ;; => "1010_1011_1100"
+  #+end_src
+* Conversions
+|-------------+-------------+--------------------|
+| From Base   | To Base     | Function           |
+|-------------+-------------+--------------------|
+| 10 (number) | 16 (string) | ~baser-dec-to-hex~ |
+| 16 (string) | 10 (number) | ~baser-hex-to-dec~ |
+| 16 (string) | 2 (string)  | ~baser-hex-to-bin~ |
+|-------------+-------------+--------------------|
+* Development
+** Running Tests
+#+begin_src shell
+make test
+#+end_src
