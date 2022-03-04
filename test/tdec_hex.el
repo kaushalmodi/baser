@@ -25,8 +25,8 @@
 
 ;;;; Decimal -> Hexadecimal
 (ert-deftest test-pos-to-hex ()
-  (let ((inp '(    0     10    100   1023   1024   4095   4096  65535    65536))
-        (ref '("0000" "000a" "0064" "03ff" "0400" "0fff" "1000" "ffff" "010000"))
+  (let ((inp '(    0     10    100   1023   1024   4095   4096  32767))
+        (ref '("0000" "000a" "0064" "03ff" "0400" "0fff" "1000" "7fff"))
         out)
     (dolist (dec inp)
       (push (baser-dec-to-hex dec) out))
@@ -40,10 +40,24 @@
       (push (baser-dec-to-hex dec) out))
     (should (equal ref (nreverse out)))))
 
+(ert-deftest test-dec-str-to-hex ()
+  (let ((inp '("32'd65535" "-8'd1"))
+        (ref '(     "ffff"  "ffff"))
+        out)
+    (dolist (dec inp)
+      (push (baser-dec-to-hex dec) out))
+    (should (equal ref (nreverse out)))))
+
 (ert-deftest test-pos-to-hex-inp-not-int ()
   (let ((inp '("a" 1.1 'x)))
     (dolist (i inp)
       (should-error (baser-dec-to-hex i)))))
+
+(ert-deftest test-dec-to-hex-inp-too-large ()
+  (let ((inp '(65535 "3'd4" "-2'd3")))
+    (dolist (dec inp)
+      (should-error (baser-dec-to-hex dec)
+                    :type 'baser-number-too-large))))
 
 ;;;; Hexadecimal -> Decimal
 (ert-deftest test-hex-to-pos-8-bits ()
@@ -124,13 +138,15 @@
   (let ((num-bits 3)
         (inp '("0x8")))
     (dolist (hex inp)
-      (should-error (baser-hex-to-dec hex num-bits)))))
+      (should-error (baser-hex-to-dec hex num-bits)
+                    :type 'baser-number-too-large))))
 
 (ert-deftest test-hex-to-dec-inp-too-large-8-bits ()
   (let ((num-bits 8)
         (inp '("0x100")))
     (dolist (hex inp)
-      (should-error (baser-hex-to-dec hex num-bits)))))
+      (should-error (baser-hex-to-dec hex num-bits)
+                    :type 'baser-number-too-large))))
 
 (ert-deftest test-hex-to-dec-invalid-hex-inp ()
   (let ((inp '("32'1234_abcd" "a&b" "'habcdefghi")))

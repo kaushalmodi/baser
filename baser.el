@@ -29,6 +29,13 @@
 
 ;;; Variables
 
+(defcustom baser-default-num-bits 16
+  "Number of bits to be assumed if not parsed from the string."
+  :group 'baser
+  :type 'integer)
+
+(define-error 'baser-number-too-large "Number too large to fit in the number of bits")
+
 
 
 ;;; Functions
@@ -81,6 +88,16 @@ of bits, and HEX-STR is the converted hexadecimal string."
                  (ceiling (/ (/ (log (1+ (abs dec))) (log 2)) 8))))
          (hex-fmt (format "%%0%0dx" (* 2 bytes)))
          hex-str)
+    ;; Default value of `num-bits' if not parsed from `dec-str'.
+    (setq num-bits (or num-bits baser-default-num-bits))
+    (let* ((unsigned-max-pos (1- (expt 2 num-bits)))
+           (signed-max-pos (lsh unsigned-max-pos -1))
+           (signed-max-neg (- (1+ signed-max-pos)))
+           (overflowp (or (and (>= dec 0) (> dec signed-max-pos))
+                          (and (< dec 0) (< dec signed-max-neg)))))
+      (when overflowp
+        (signal 'baser-number-too-large
+                (format "%d cannot be represented using %0d bits" dec num-bits))))
     (when (< dec 0)
       (let ((max (expt 2 (* 8 bytes))))
         (setq dec (- max (- dec)))))
@@ -162,7 +179,7 @@ If a hexadecimal string cannot be parsed, return nil."
 Optional argument NUM-BITS is used to determine the sign of the
 decimal number and if the hex string can be represented by those
 many bits.  If this argument is not specified, it defaults to
-16.
+`baser-default-num-bits'.
 
 Returns a cons (NUM-BITS . DEC-VALUE) where NUM-BITS is the
 number of bits, and DEC-VALUE is the converted decimal number."
@@ -173,12 +190,15 @@ number of bits, and DEC-VALUE is the converted decimal number."
          (hex (cdr parsed-hex)))
     (when (null hex)
       (error "%s" (format "Input %s is not a valid hex string" inp-hex)))
-    (setq num-bits (or num-bits 16)) ;Default value of `num-bits' if not set or parsed from `hex' string
+    ;; Default value of `num-bits' if not set or parsed from `hex'
+    ;; string.
+    (setq num-bits (or num-bits baser-default-num-bits))
     (let* ((unsigned-max-pos (1- (expt 2 num-bits)))
            (signed-max-pos (lsh unsigned-max-pos -1))
            (unsigned-val (string-to-number hex 16)))
       (when (> unsigned-val unsigned-max-pos)
-        (error "%s" (format "%s cannot be represented as a %0d bit hex value" hex num-bits)))
+        (signal 'baser-number-too-large
+                (format "%s cannot be represented as a %0d bit hex value" hex num-bits)))
       (let* ((negativep (> unsigned-val signed-max-pos))
              (dec (if negativep
                       (- unsigned-val (1+ unsigned-max-pos))
