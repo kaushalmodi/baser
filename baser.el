@@ -25,6 +25,7 @@
 ;;; Code:
 
 (require 'subr-x)                       ;For `string-remove-prefix'
+(require 'cl-lib)                       ;For `cl-incf'
 
 
 ;;; Variables
@@ -318,6 +319,98 @@ When called non-interactively, return the binary string."
    (hex                                 ;Fn called non-interactively
     (cdr (baser--hex-to-bin-core hex)))
    (t                        ;not interactive, no region, hex is nil
+    (signal 'baser-unreachable "Unsupported scenario"))))
+
+(defun baser--parse-bin (bin)
+  "Parse the input BIN string.
+
+Return a cons (NUM-BITS . DEC-VAL) where NUM-BITS is the number
+of bits parsed from BIN, and DEC-VAL is the unsigned decimal
+value of that binary representation.
+
+Example: \"4\\='b1101\" parses to (4 . 13).
+
+If the BIN string has the \"\\='b\" notation (e.g. \"\\='b1010\"),
+but without the number of bits, set NUM-BITS to 32.
+
+If a binary string cannot be parsed, return nil."
+  (let ((dec-val 0)
+        num-bits bin-str)
+    (save-match-data
+      (when (string-match "\\`\\(?:\\(?:\\(?1:[0-9]*\\)'b\\)\\|0b\\)?\\(?2:[01_]+\\)\\'" bin)
+        (let ((num-bits-str (match-string-no-properties 1 bin))
+              (idx 0))
+          (setq bin-str (replace-regexp-in-string
+                         "_" ""
+                         (match-string-no-properties 2 bin)))
+          (when (stringp num-bits-str)
+            (if (string= "" num-bits-str)
+                (setq num-bits 32)
+              (setq num-bits (string-to-number num-bits-str))))
+          ;; e.g. 4'b1101 = 1*(2^0) + 0*(2^1) + 1*(2^2) + 1*(2^3) = 13 (decimal)
+          (dolist (b (nreverse (split-string bin-str "")))
+            (when (not (string= "" b))
+              (cl-incf dec-val (* (string-to-number b) (expt 2 idx)))
+              (cl-incf idx)))
+          `(,num-bits . ,dec-val))))))
+
+(defun baser--bin-to-hex-core (bin-str)
+  "Convert binary string BIN-STR to hex.
+
+Returns a cons (NUM-BITS . HEX-STR) where NUM-BITS is the number
+of bits, and HEX-STR is the converted hexadecimal string."
+  (unless (stringp bin-str)
+    (error (format "Input %S is not an string" bin-str)))
+  (let* ((parsed-bin (baser--parse-bin bin-str))
+         (num-bits (car parsed-bin))
+         (unsigned-val (cdr parsed-bin))
+         hex-str)
+    ;; Default value of `num-bits' if not parsed from `bin-str'.
+    (setq num-bits (or num-bits baser-default-num-bits))
+    (let* ((num-nib (ceiling (/ num-bits 4.0)))
+           (hex-fmt (format "%%0%dx" num-nib))
+           (unsigned-max-pos (1- (expt 2 num-bits)))
+           (overflowp (> unsigned-val unsigned-max-pos)))
+      (when overflowp
+        (signal 'baser-number-too-large
+                (format "%s (unsigned decimal %d) cannot be represented using %d bits" bin-str unsigned-val num-bits)))
+      (setq hex-str (format hex-fmt unsigned-val)))
+    `(,num-bits . ,hex-str)))
+
+(defun baser-bin-to-hex (bin &optional beg end)
+  "Convert a binary string BIN to hex.
+
+BIN is a string representing a number in binary format.
+
+If a region is selected, convert all binary strings in the
+selected region in the buffer to hex.  BEG and END are auto-set
+to the beginning and end of the selected region.
+
+Else, prompt the user to enter the binary string in the
+minibuffer.  The hex output is printed in the echo area.
+
+When called non-interactively, return the hex string."
+  (interactive
+   (if (use-region-p)
+       (list nil nil (region-beginning) (region-end))
+     (list (read-string "Enter a binary string: "))))
+  (cond
+   ((and (interactive-p) beg end) ;Fn called interactively after selecting a region
+    (save-excursion
+      (save-restriction
+        (narrow-to-region beg end)
+        (goto-char beg)
+        (while (re-search-forward "\\`\\(\\([0-9]*'b\\)\\|0b\\)?\\([01_]+\\)\\'" nil :noerror)
+          (let ((hex (cdr (baser--bin-to-hex-core (match-string-no-properties 0)))))
+            (replace-match hex))))))
+   (bin
+    (let* ((num-bits-hex (baser--bin-to-hex-core bin))
+           (num-bits (car num-bits-hex))
+           (hex (cdr num-bits-hex)))
+      (if (interactive-p) ;Fn called interactively without selecting a region
+          (message "%s" (format "bin %s -> %s (%d bit hexadecimal)" bin hex num-bits)))
+      hex))                    ;Fn called non-interactively
+   (t                          ;not interactive, no region, bin is nil
     (signal 'baser-unreachable "Unsupported scenario"))))
 
 

@@ -23,8 +23,15 @@ expression of the conversion function.
   #+begin_src emacs-lisp
   (baser-dec-to-hex 100)       ;; => "0064"
   (baser-dec-to-hex "8'd55")   ;; => "0037"
+  (baser-dec-to-hex "-8'd55")  ;; => "ffc9"
+
   (baser-hex-to-dec "0x100")   ;; => 256
+  (baser-hex-to-dec "12'hfff") ;; => -1
+  (baser-hex-to-dec "16'hfff") ;; => 4095
+
   (baser-hex-to-bin "0xabc")   ;; => "1010_1011_1100"
+
+  (baser-bin-to-hex "4'b1101") ;; => "d"
   #+end_src
 * Conversions
 |-----------------------+-------------+--------------------|
@@ -33,6 +40,7 @@ expression of the conversion function.
 | 10 (number or string) | 16 (string) | ~baser-dec-to-hex~ |
 | 16 (string)           | 10 (number) | ~baser-hex-to-dec~ |
 | 16 (string)           | 2 (string)  | ~baser-hex-to-bin~ |
+| 2 (string)            | 16 (string) | ~baser-bin-to-hex~ |
 |-----------------------+-------------+--------------------|
 * Development
 ** Running Tests

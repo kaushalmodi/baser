@@ -38,4 +38,20 @@
       (should-error (baser-hex-to-bin hex)))))
 
 
+;;;; Binary -> Hexadecimal
+(ert-deftest test-bin-to-hex ()
+  (let ((inp '("1010" "4'b1011" "8'b1100" "12'b11_01" "4'b1111" "0b1010_0101"))
+        (ref '("000a"       "b"      "0c"      "00d"        "f"        "00a5"))
+        out)
+    (dolist (bin inp)
+      (push (baser-bin-to-hex bin) out))
+    (should (equal ref (nreverse out)))))
+
+(ert-deftest test-bin-to-hex-inp-too-large-8-bits ()
+  (let ((inp '("1'b10")))
+    (dolist (bin inp)
+      (should-error (baser-bin-to-hex bin)
+                    :type 'baser-number-too-large))))
+
+
 (provide 'thex_bin)
