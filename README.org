@@ -1,6 +1,8 @@
 #+title: Emacs-Lisp Library for converting to and from Decimal, Hexadecimal and Binary numbers
 #+author: Kaushal Modi
 
+[[https://github.com/kaushalmodi/baser/actions][https://github.com/kaushalmodi/baser/actions/workflows/test.yml/badge.svg]] [[https://www.gnu.org/licenses/gpl-3.0][https://img.shields.io/badge/License-GPL%20v3-blue.svg]]
+
 * Installation
 Clone this repo, have ~baser.el~ in the ~load-path~ and ~(require
 'baser)~.
