@@ -40,13 +40,16 @@
       (push (baser-dec-to-bin dec) out))
     (should (equal ref (nreverse out)))))
 
-(ert-deftest test-dec-to-bin-large-number ()
-  (let ((inp '("-68'd24513674335241209712"))
-        (ref '("1110_1010_1011_1100_1101_1110_1111_0001_0010_0011_0100_0101_0110_0111_1000_1001_0000"))
-        out)
-    (dolist (dec inp)
-      (push (baser-dec-to-bin dec) out))
-    (should (equal ref (nreverse out)))))
+;; This large number conversion test fails on emacs 26.3 and older
+;; versions.
+(unless (version< emacs-version "27.2")
+  (ert-deftest test-dec-to-bin-large-number ()
+    (let ((inp '("-68'd24513674335241209712"))
+          (ref '("1110_1010_1011_1100_1101_1110_1111_0001_0010_0011_0100_0101_0110_0111_1000_1001_0000"))
+          out)
+      (dolist (dec inp)
+        (push (baser-dec-to-bin dec) out))
+      (should (equal ref (nreverse out))))))
 
 
 ;;;; Binary -> Decimal
