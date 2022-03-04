@@ -1,4 +1,4 @@
-# Makefile for basejump.el
+# Makefile for baser.el
 
 ifdef INSIDE_EMACS
 	EMACS := $(shell which emacs)

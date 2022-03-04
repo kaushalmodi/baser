@@ -1,4 +1,4 @@
-;;; all_tests.el --- Tests for basejump.el                   -*- lexical-binding: t; -*-
+;;; all_tests.el --- Tests for baser.el                   -*- lexical-binding: t; -*-
 
 ;; Authors: Kaushal Modi <kaushal.modi@gmail.com>
 
@@ -21,7 +21,7 @@
 
 (setq load-prefer-newer t)
 
-(require 'basejump)
+(require 'baser)
 
 (require 'tdec_hex)
 (require 'thex_bin)

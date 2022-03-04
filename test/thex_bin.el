@@ -29,13 +29,13 @@
         (ref '("1010" "1011" "1100" "1101" "1110"))
         out)
     (dolist (hex inp)
-      (push (basejump-hex-to-bin hex) out))
+      (push (baser-hex-to-bin hex) out))
     (should (equal ref (nreverse out)))))
 
 (ert-deftest test-hex-to-bin-invalid-hex-inp ()
   (let ((inp '("32'1234_abcd" "a&b" "'habcdefghi")))
     (dolist (hex inp)
-      (should-error (basejump-hex-to-bin hex)))))
+      (should-error (baser-hex-to-bin hex)))))
 
 
 (provide 'thex_bin)

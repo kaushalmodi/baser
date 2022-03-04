@@ -29,7 +29,7 @@
         (ref '("0000" "000a" "0064" "03ff" "0400" "0fff" "1000" "ffff" "010000"))
         out)
     (dolist (dec inp)
-      (push (basejump-dec-to-hex dec) out))
+      (push (baser-dec-to-hex dec) out))
     (should (equal ref (nreverse out)))))
 
 (ert-deftest test-neg-to-hex ()
@@ -37,13 +37,13 @@
         (ref '("ffff" "fffe" "fc01" "fc00"))
         out)
     (dolist (dec inp)
-      (push (basejump-dec-to-hex dec) out))
+      (push (baser-dec-to-hex dec) out))
     (should (equal ref (nreverse out)))))
 
 (ert-deftest test-pos-to-hex-inp-not-int ()
   (let ((inp '("a" 1.1 'x)))
     (dolist (i inp)
-      (should-error (basejump-dec-to-hex i)))))
+      (should-error (baser-dec-to-hex i)))))
 
 ;;;; Hexadecimal -> Decimal
 (ert-deftest test-hex-to-pos-8-bits ()
@@ -52,7 +52,7 @@
         (ref '(   15  15   15      0      1))
         out)
     (dolist (hex inp)
-      (push (basejump-hex-to-dec hex num-bits) out))
+      (push (baser-hex-to-dec hex num-bits) out))
     (should (equal ref (nreverse out)))))
 
 (ert-deftest test-hex-to-pos-16-bits ()
@@ -61,7 +61,7 @@
         (ref '(   15    255  15  255       15      0      1     4095    32767))
         out)
     (dolist (hex inp)
-      (push (basejump-hex-to-dec hex num-bits) out))
+      (push (baser-hex-to-dec hex num-bits) out))
     (should (equal ref (nreverse out)))))
 
 (ert-deftest test-hex-to-neg-8-bits ()
@@ -70,7 +70,7 @@
         (ref '(   -1   -1     -2   -3      -4    251))
         out)
     (dolist (hex inp)
-      (push (basejump-hex-to-dec hex num-bits) out))
+      (push (baser-hex-to-dec hex num-bits) out))
     (should (equal ref (nreverse out)))))
 
 (ert-deftest test-hex-to-neg-16-bits ()
@@ -79,7 +79,7 @@
         (ref '(     -1       -2   -32768   -32767))
         out)
     (dolist (hex inp)
-      (push (basejump-hex-to-dec hex num-bits) out))
+      (push (baser-hex-to-dec hex num-bits) out))
     (should (equal ref (nreverse out)))))
 
 (ert-deftest test-hex-to-dec-auto-num-bits ()
@@ -87,7 +87,7 @@
         (ref '(    -1      255    32767    65535           -1))
         out)
     (dolist (hex inp)
-      (push (basejump-hex-to-dec hex) out))
+      (push (baser-hex-to-dec hex) out))
     (should (equal ref (nreverse out)))))
 
 (ert-deftest test-hex-to-dec-3-bits ()
@@ -95,7 +95,7 @@
         (ref '(    2      1      0     -1))
         out)
     (dolist (hex inp)
-      (push (basejump-hex-to-dec hex) out))
+      (push (baser-hex-to-dec hex) out))
     (should (equal ref (nreverse out)))))
 
 (ert-deftest test-hex-to-dec-7-bits ()
@@ -104,7 +104,7 @@
         (ref '( 31   63   -1))
         out)
     (dolist (hex inp)
-      (push (basejump-hex-to-dec hex num-bits) out))
+      (push (baser-hex-to-dec hex num-bits) out))
     (should (equal ref (nreverse out)))))
 
 (ert-deftest test-hex-to-dec-underscores ()
@@ -112,30 +112,30 @@
         (ref '(    -21555            -2        2167427))
         out)
     (dolist (hex inp)
-      (push (basejump-hex-to-dec hex) out))
+      (push (baser-hex-to-dec hex) out))
     (should (equal ref (nreverse out)))))
 
 (ert-deftest test-hex-to-dec-inp-not-string ()
   (let ((inp '(1 1.1 'x)))
     (dolist (i inp)
-      (should-error (basejump-hex-to-dec i nil)))))
+      (should-error (baser-hex-to-dec i nil)))))
 
 (ert-deftest test-hex-to-dec-inp-too-large-3-bits ()
   (let ((num-bits 3)
         (inp '("0x8")))
     (dolist (hex inp)
-      (should-error (basejump-hex-to-dec hex num-bits)))))
+      (should-error (baser-hex-to-dec hex num-bits)))))
 
 (ert-deftest test-hex-to-dec-inp-too-large-8-bits ()
   (let ((num-bits 8)
         (inp '("0x100")))
     (dolist (hex inp)
-      (should-error (basejump-hex-to-dec hex num-bits)))))
+      (should-error (baser-hex-to-dec hex num-bits)))))
 
 (ert-deftest test-hex-to-dec-invalid-hex-inp ()
   (let ((inp '("32'1234_abcd" "a&b" "'habcdefghi")))
     (dolist (hex inp)
-      (should-error (basejump-hex-to-dec hex)))))
+      (should-error (baser-hex-to-dec hex)))))
 
 
 (provide 'tdec_hex)

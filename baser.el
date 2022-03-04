@@ -1,4 +1,4 @@
-;;; basejump.el --- Convert integers among base 2, 10, 16           -*- lexical-binding: t -*-
+;;; baser.el --- Convert integers among base 2, 10, 16           -*- lexical-binding: t -*-
 
 ;; Authors: Kaushal Modi <kaushal.modi@gmail.com>
 
@@ -19,7 +19,7 @@
 
 ;;; Commentary:
 
-;; basejump.el provides functions to convert signed and unsigned
+;; baser.el provides functions to convert signed and unsigned
 ;; integers among decimal, binary and hexadecimal formats.
 
 ;;; Code:
@@ -34,7 +34,7 @@
 ;;; Functions
 
 ;;;; Decimal <-> Hexadecimal
-(defun basejump--parse-dec (dec)
+(defun baser--parse-dec (dec)
   "Parse the input DEC string.
 
 Return a cons (NUM-BITS . DEC-VAL) where NUM-BITS is the number
@@ -66,14 +66,14 @@ If a decimal string cannot be parsed, return nil."
     ;; (message "dbg dec-val : %S" dec-val)
     `(,num-bits . ,dec-val)))
 
-(defun basejump--dec-to-hex-core (inp-dec)
+(defun baser--dec-to-hex-core (inp-dec)
   "Convert decimal number INP-DEC in string format to hex.
 
 Returns a cons (NUM-BITS . HEX-STR) where NUM-BITS is the number
 of bits, and HEX-STR is the converted hexadecimal string."
   (unless (stringp inp-dec)
     (error (format "Input %S is not an string" inp-dec)))
-  (let* ((parsed-dec (basejump--parse-dec inp-dec))
+  (let* ((parsed-dec (baser--parse-dec inp-dec))
          (num-bits (car parsed-dec))
          (dec (cdr parsed-dec))
          (bytes (max
@@ -87,7 +87,7 @@ of bits, and HEX-STR is the converted hexadecimal string."
     (setq hex-str (format hex-fmt dec))
     `(,num-bits . ,hex-str)))
 
-(defun basejump-dec-to-hex (dec &optional beg end)
+(defun baser-dec-to-hex (dec &optional beg end)
   "Convert signed decimal number DEC to hex.
 
 DEC is a positive or negative integer.
@@ -104,7 +104,7 @@ When called non-interactively, return the hex string."
    (if (use-region-p)
        (list nil nil (region-beginning) (region-end))
      (let* ((dec-str (read-string "Enter an integer in decimal: "))
-            (dec-parsed (basejump--parse-dec dec-str))
+            (dec-parsed (baser--parse-dec dec-str))
             (dec-val (cdr dec-parsed)))
        (list dec-val))))
   (cond
@@ -114,19 +114,19 @@ When called non-interactively, return the hex string."
         (narrow-to-region beg end)
         (goto-char beg)
         (while (re-search-forward "\\-?\\(\\([0-9]*'d\\)\\|0x\\)*\\([0-9_]+\\)\\b" nil :noerror)
-          (let ((hex (cdr (basejump--dec-to-hex-core (match-string-no-properties 0)))))
+          (let ((hex (cdr (baser--dec-to-hex-core (match-string-no-properties 0)))))
             (replace-match hex))))))
    ((and (interactive-p) dec) ;Fn called interactively without selecting a region
-    (let* ((dec-parsed (basejump--hex-to-dec-core (number-to-string dec)))
+    (let* ((dec-parsed (baser--hex-to-dec-core (number-to-string dec)))
            (num-bits (car dec-parsed))
            (hex (cdr dec-parsed)))
       (message "%s" (format "dec %d -> %s (%d bit hexadecimal)" dec hex num-bits))))
    (dec                                 ;Fn called non-interactively
-    (cdr (basejump--dec-to-hex-core (number-to-string dec))))
+    (cdr (baser--dec-to-hex-core (number-to-string dec))))
    (t                          ;not interactive, no region, dec is nil
     (error "Unsupported scenario"))))
 
-(defun basejump--parse-hex (hex)
+(defun baser--parse-hex (hex)
   "Parse the input HEX string.
 
 Return a cons (NUM-BITS . HEX-STR) where NUM-BITS is the number
@@ -155,7 +155,7 @@ If a hexadecimal string cannot be parsed, return nil."
     ;; (message "dbg hex-str : %S" hex-str)
     `(,num-bits . ,hex-str)))
 
-(defun basejump--hex-to-dec-core (inp-hex &optional num-bits)
+(defun baser--hex-to-dec-core (inp-hex &optional num-bits)
   "Convert INP-HEX string to a signed decimal number.
 
 Optional argument NUM-BITS is used to determine the sign of the
@@ -167,7 +167,7 @@ Returns a cons (NUM-BITS . DEC-VALUE) where NUM-BITS is the
 number of bits, and DEC-VALUE is the converted decimal number."
   (unless (stringp inp-hex)
     (error (format "Input %S is not an string" inp-hex)))
-  (let* ((parsed-hex (basejump--parse-hex inp-hex))
+  (let* ((parsed-hex (baser--parse-hex inp-hex))
          (num-bits (or (car parsed-hex) num-bits))
          (hex (cdr parsed-hex)))
     (when (null hex)
@@ -189,7 +189,7 @@ number of bits, and DEC-VALUE is the converted decimal number."
         ;; (message "dbg dec : %S" dec)
         `(,num-bits . ,dec)))))
 
-(defun basejump-hex-to-dec (hex &optional num-bits beg end)
+(defun baser-hex-to-dec (hex &optional num-bits beg end)
   "Convert HEX string to a signed decimal number.
 
 The input is represented by NUM-BITS number of bits.
@@ -213,25 +213,25 @@ When called non-interactively, returns the decimal value."
         (narrow-to-region beg end)
         (goto-char beg)
         (while (re-search-forward "\\(\\([0-9]*'h\\)\\|0x\\)\\([0-9a-fA-F_]+\\)" nil :noerror)
-          (let ((dec (cdr (basejump--hex-to-dec-core (match-string-no-properties 0)))))
+          (let ((dec (cdr (baser--hex-to-dec-core (match-string-no-properties 0)))))
             (replace-match (number-to-string dec)))))))
    ((and (interactive-p) hex) ;Fn called interactively without selecting a region
-    (let* ((num-bits-dec (basejump--hex-to-dec-core hex))
+    (let* ((num-bits-dec (baser--hex-to-dec-core hex))
            (num-bits (car num-bits-dec))
            (dec-val (cdr num-bits-dec)))
       (message "%s" (format "hex %s -> %s (%d bit decimal)" hex dec-val num-bits))))
    (hex                                 ;Fn called non-interactively
-    (cdr (basejump--hex-to-dec-core hex num-bits)))
+    (cdr (baser--hex-to-dec-core hex num-bits)))
    (t                        ;not interactive, no region, hex is nil
     (error "Unsupported scenario"))))
 
 ;;;; Hexadecimal <-> Binary
-(defun basejump--hex-to-bin-core (inp-hex)
+(defun baser--hex-to-bin-core (inp-hex)
   "Convert hex number string INP-HEX to binary.
 
 Returns a cons (NUM-BITS . BIN-STR) where NUM-BITS is the number
 of bits, and BIN-STR is the binary representation."
-  (let* ((parsed-hex (basejump--parse-hex inp-hex))
+  (let* ((parsed-hex (baser--parse-hex inp-hex))
          (num-bits (car parsed-hex))
          (hex (cdr parsed-hex))
          (bin ""))
@@ -261,7 +261,7 @@ of bits, and BIN-STR is the binary representation."
     (setq bin (string-remove-suffix "_" bin))
     `(,num-bits . ,bin)))
 
-(defun basejump-hex-to-bin (hex &optional beg end)
+(defun baser-hex-to-bin (hex &optional beg end)
   "Convert HEX string to binary.
 
 If a region is selected, convert all hex strings in the selected
@@ -283,21 +283,21 @@ When called non-interactively, return the binary string."
         (narrow-to-region beg end)
         (goto-char beg)
         (while (re-search-forward "\\(\\([0-9]*'h\\)\\|0x\\)\\([0-9a-fA-F_]+\\)" nil :noerror)
-          (let ((bin (cdr (basejump--hex-to-bin-core (match-string-no-properties 0)))))
+          (let ((bin (cdr (baser--hex-to-bin-core (match-string-no-properties 0)))))
             (replace-match bin))))))
    ((and (interactive-p) hex) ;Fn called interactively without selecting a region
-    (let* ((num-bits-bin (basejump--hex-to-bin-core hex))
+    (let* ((num-bits-bin (baser--hex-to-bin-core hex))
            (num-bits (car num-bits-bin))
            (bin-str (cdr num-bits-bin)))
       (if (numberp num-bits)
           (message "%s" (format "hex %s -> %s (%d bit binary)" hex bin-str num-bits))
         (message "%s" (format "hex %s -> %s (binary)" hex bin-str)))))
    (hex                                 ;Fn called non-interactively
-    (cdr (basejump--hex-to-bin-core hex)))
+    (cdr (baser--hex-to-bin-core hex)))
    (t                        ;not interactive, no region, hex is nil
     (error "Unsupported scenario"))))
 
 
-(provide 'basejump)
+(provide 'baser)
 
-;;; basejump.el ends here
+;;; baser.el ends here
