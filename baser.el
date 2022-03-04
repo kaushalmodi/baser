@@ -120,17 +120,20 @@ hex output is printed in the echo area.
 When called non-interactively, return the hex string."
   (interactive
    (if (use-region-p)
-       (list nil nil (region-beginning) (region-end))
+       (list nil (region-beginning) (region-end))
      (list (read-string "Enter a decimal number: "))))
   (cond
    ((and (interactive-p) beg end) ;Fn called interactively after selecting a region
     (save-excursion
       (save-restriction
-        (narrow-to-region beg end)
-        (goto-char beg)
-        (while (re-search-forward "\\-?\\(\\([0-9]*'d\\)\\|0x\\)*\\([0-9_]+\\)\\b" nil :noerror)
-          (let ((hex (cdr (baser--dec-to-hex-core (match-string-no-properties 0)))))
-            (replace-match hex))))))
+        (let ((num-replacements 0))
+          (narrow-to-region beg end)
+          (goto-char beg)
+          (while (re-search-forward "\\b\\-?\\(\\([0-9]*'d\\)\\|0x\\)*\\([0-9_]+\\)\\b" nil :noerror)
+            (let ((hex (cdr (baser--dec-to-hex-core (match-string-no-properties 0)))))
+              (replace-match hex)
+              (cl-incf num-replacements)))
+          (message "Made %d dec -> hex conversions" num-replacements)))))
    (dec
     (let* ((dec-str (if (stringp dec)
                         dec
@@ -231,11 +234,14 @@ When called non-interactively, returns the decimal value."
    ((and (interactive-p) beg end) ;Fn called interactively after selecting a region
     (save-excursion
       (save-restriction
-        (narrow-to-region beg end)
-        (goto-char beg)
-        (while (re-search-forward "\\(\\([0-9]*'h\\)\\|0x\\)\\([0-9a-fA-F_]+\\)" nil :noerror)
-          (let ((dec (cdr (baser--hex-to-dec-core (match-string-no-properties 0)))))
-            (replace-match (number-to-string dec)))))))
+        (let ((num-replacements 0))
+          (narrow-to-region beg end)
+          (goto-char beg)
+          (while (re-search-forward "\\b\\(\\([0-9]*'h\\)\\|0x\\)\\([0-9a-fA-F_]+\\)\\b" nil :noerror)
+            (let ((dec (cdr (baser--hex-to-dec-core (match-string-no-properties 0)))))
+              (replace-match (number-to-string dec))
+              (cl-incf num-replacements)))
+          (message "Made %d hex -> dec conversions" num-replacements)))))
    ((and (interactive-p) hex) ;Fn called interactively without selecting a region
     (let* ((num-bits-dec (baser--hex-to-dec-core hex))
            (num-bits (car num-bits-dec))
@@ -259,41 +265,42 @@ if the `num-bits' cannot be parsed from HEX-STR, it defaults to
 
 Returns a cons (NUM-BITS . BIN-STR) where NUM-BITS is the number
 of bits, and BIN-STR is the binary representation."
-  (let* ((parsed-hex (baser--parse-hex hex-str))
-         (num-bits (or (car parsed-hex) num-bits)) ;Fall back to `num-bits' from arg
-         (hex (cdr parsed-hex))
-         (bin ""))
-    (when (null hex)
-      (user-error "%s" (format "Input %s is not a valid hex string" hex-str)))
-    ;; Default value of `num-bits' if not set or parsed from `hex'
-    ;; string.
-    (setq num-bits (or num-bits baser-default-num-bits))
-    (dolist (h (split-string hex "" :omit-nulls))
-      (setq bin (concat bin
-                        (cl-ecase (string-to-char h)
-                          (?0 "0000")
-                          (?1 "0001")
-                          (?2 "0010")
-                          (?3 "0011")
-                          (?4 "0100")
-                          (?5 "0101")
-                          (?6 "0110")
-                          (?7 "0111")
-                          (?8 "1000")
-                          (?9 "1001")
-                          (?a "1010")
-                          (?b "1011")
-                          (?c "1100")
-                          (?d "1101")
-                          (?e "1110")
-                          (?f "1111")))))
-    (when (> (length bin) num-bits) ;Trim extra bits from the MSB side
-      (setq bin (reverse (substring (reverse bin) 0 num-bits))))
-    ;; Add the "_" nibble separately for readability.
-    (setq bin (string-remove-prefix
-               "_"
-               (reverse (replace-regexp-in-string ".\\{4\\}" "\\&_" (reverse bin)))))
-    `(,num-bits . ,bin)))
+  (save-match-data
+    (let* ((parsed-hex (baser--parse-hex hex-str))
+           (num-bits (or (car parsed-hex) num-bits)) ;Fall back to `num-bits' from arg
+           (hex (cdr parsed-hex))
+           (bin ""))
+      (when (null hex)
+        (user-error "%s" (format "Input %s is not a valid hex string" hex-str)))
+      ;; Default value of `num-bits' if not set or parsed from `hex'
+      ;; string.
+      (setq num-bits (or num-bits baser-default-num-bits))
+      (dolist (h (split-string hex "" :omit-nulls))
+        (setq bin (concat bin
+                          (cl-ecase (string-to-char h)
+                            (?0 "0000")
+                            (?1 "0001")
+                            (?2 "0010")
+                            (?3 "0011")
+                            (?4 "0100")
+                            (?5 "0101")
+                            (?6 "0110")
+                            (?7 "0111")
+                            (?8 "1000")
+                            (?9 "1001")
+                            (?a "1010")
+                            (?b "1011")
+                            (?c "1100")
+                            (?d "1101")
+                            (?e "1110")
+                            (?f "1111")))))
+      (when (> (length bin) num-bits) ;Trim extra bits from the MSB side
+        (setq bin (reverse (substring (reverse bin) 0 num-bits))))
+      ;; Add the "_" nibble separately for readability.
+      (setq bin (string-remove-prefix
+                 "_"
+                 (reverse (replace-regexp-in-string ".\\{4\\}" "\\&_" (reverse bin)))))
+      `(,num-bits . ,bin))))
 
 (defun baser-hex-to-bin (hex &optional beg end)
   "Convert HEX string to binary.
@@ -308,17 +315,22 @@ minibuffer.  The binary output is printed in the echo area.
 When called non-interactively, return the binary string."
   (interactive
    (if (use-region-p)
-       (list nil nil (region-beginning) (region-end))
+       (list nil (region-beginning) (region-end))
      (list (read-string "Enter a hex number: "))))
   (cond
    ((and (interactive-p) beg end) ;Fn called interactively after selecting a region
     (save-excursion
       (save-restriction
-        (narrow-to-region beg end)
-        (goto-char beg)
-        (while (re-search-forward "\\(\\([0-9]*'h\\)\\|0x\\)\\([0-9a-fA-F_]+\\)" nil :noerror)
-          (let ((bin (cdr (baser--hex-to-bin-core (match-string-no-properties 0)))))
-            (replace-match bin))))))
+        (let ((num-replacements 0))
+          (narrow-to-region beg end)
+          (goto-char beg)
+          (while (re-search-forward "\\b\\(\\([0-9]*'h\\)\\|0x\\)\\([0-9a-fA-F_]+\\)\\b" nil :noerror)
+            (message "dbg: match 0: %S" (match-string-no-properties 0))
+            (let ((bin (cdr (baser--hex-to-bin-core (match-string-no-properties 0)))))
+              (message "dbg: bin: %S" bin)
+              (replace-match bin)
+              (cl-incf num-replacements)))
+          (message "Made %d hex -> bin conversions" num-replacements)))))
    ((and (interactive-p) hex) ;Fn called interactively without selecting a region
     (let* ((num-bits-bin (baser--hex-to-bin-core hex))
            (num-bits (car num-bits-bin))
@@ -401,17 +413,20 @@ minibuffer.  The hex output is printed in the echo area.
 When called non-interactively, return the hex string."
   (interactive
    (if (use-region-p)
-       (list nil nil (region-beginning) (region-end))
+       (list nil (region-beginning) (region-end))
      (list (read-string "Enter a binary string: "))))
   (cond
    ((and (interactive-p) beg end) ;Fn called interactively after selecting a region
     (save-excursion
       (save-restriction
-        (narrow-to-region beg end)
-        (goto-char beg)
-        (while (re-search-forward "\\`\\(\\([0-9]*'b\\)\\|0b\\)?\\([01_]+\\)\\'" nil :noerror)
-          (let ((hex (cdr (baser--bin-to-hex-core (match-string-no-properties 0)))))
-            (replace-match hex))))))
+        (let ((num-replacements 0))
+          (narrow-to-region beg end)
+          (goto-char beg)
+          (while (re-search-forward "\\b\\(\\([0-9]*'b\\)\\|0b\\)?\\([01_]+\\)\\b" nil :noerror)
+            (let ((hex (cdr (baser--bin-to-hex-core (match-string-no-properties 0)))))
+              (replace-match hex)
+              (cl-incf num-replacements)))
+          (message "Made %d bin -> hex conversions" num-replacements)))))
    (bin
     (let* ((num-bits-hex (baser--bin-to-hex-core bin))
            (num-bits (car num-bits-hex))
@@ -440,18 +455,21 @@ binary output is printed in the echo area.
 When called non-interactively, return the binary string."
   (interactive
    (if (use-region-p)
-       (list nil nil (region-beginning) (region-end))
+       (list nil (region-beginning) (region-end))
      (list (read-string "Enter a decimal number: "))))
   (cond
    ((and (interactive-p) beg end) ;Fn called interactively after selecting a region
     (save-excursion
       (save-restriction
-        (narrow-to-region beg end)
-        (goto-char beg)
-        (while (re-search-forward "\\-?\\(\\([0-9]*'d\\)\\|0x\\)*\\([0-9_]+\\)\\b" nil :noerror)
-          (let* ((hex-str (cdr (baser--dec-to-hex-core (match-string-no-properties 0))))
-                 (bin-str (cdr (baser--hex-to-bin-core hex-str))))
-            (replace-match bin-str))))))
+        (let ((num-replacements 0))
+          (narrow-to-region beg end)
+          (goto-char beg)
+          (while (re-search-forward "\\b\\-?\\(\\([0-9]*'d\\)\\|0x\\)*\\([0-9_]+\\)\\b" nil :noerror)
+            (let* ((hex-str (cdr (baser--dec-to-hex-core (match-string-no-properties 0))))
+                   (bin-str (cdr (baser--hex-to-bin-core hex-str))))
+              (replace-match bin-str)
+              (cl-incf num-replacements)))
+          (message "Made %d dec -> bin conversions" num-replacements)))))
    (dec
     (let* ((dec-str (if (stringp dec)
                         dec
@@ -479,18 +497,21 @@ The decimal output is printed in the echo area.
 When called non-interactively, returns the decimal value."
   (interactive
    (if (use-region-p)
-       (list nil nil (region-beginning) (region-end))
+       (list nil (region-beginning) (region-end))
      (list (read-string "Enter a binary string: "))))
   (cond
    ((and (interactive-p) beg end) ;Fn called interactively after selecting a region
     (save-excursion
       (save-restriction
-        (narrow-to-region beg end)
-        (goto-char beg)
-        (while (re-search-forward "\\`\\(\\([0-9]*'b\\)\\|0b\\)?\\([01_]+\\)\\'" nil :noerror)
-          (let* ((hex-str (cdr (baser--bin-to-hex-core (match-string-no-properties 0))))
-                 (dec-val (cdr (baser--hex-to-dec-core hex-str))))
-            (replace-match (number-to-string dec-val)))))))
+        (let ((num-replacements 0))
+          (narrow-to-region beg end)
+          (goto-char beg)
+          (while (re-search-forward "\\b\\(\\([0-9]*'b\\)\\|0b\\)?\\([01_]+\\)\\b" nil :noerror)
+            (let* ((hex-str (cdr (baser--bin-to-hex-core (match-string-no-properties 0))))
+                   (dec-val (cdr (baser--hex-to-dec-core hex-str))))
+              (replace-match (number-to-string dec-val))
+              (cl-incf num-replacements)))
+          (message "Made %d bin -> dec conversions" num-replacements)))))
    (bin
     (let* ((num-bits-hex (baser--bin-to-hex-core bin))
            (num-bits (car num-bits-hex))
