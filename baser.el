@@ -66,14 +66,14 @@ If a decimal string cannot be parsed, return nil."
     ;; (message "dbg dec-val : %S" dec-val)
     `(,num-bits . ,dec-val)))
 
-(defun baser--dec-to-hex-core (inp-dec)
-  "Convert decimal number INP-DEC in string format to hex.
+(defun baser--dec-to-hex-core (dec-str)
+  "Convert decimal number DEC-STR in string format to hex.
 
 Returns a cons (NUM-BITS . HEX-STR) where NUM-BITS is the number
 of bits, and HEX-STR is the converted hexadecimal string."
-  (unless (stringp inp-dec)
-    (error (format "Input %S is not an string" inp-dec)))
-  (let* ((parsed-dec (baser--parse-dec inp-dec))
+  (unless (stringp dec-str)
+    (error (format "Input %S is not an string" dec-str)))
+  (let* ((parsed-dec (baser--parse-dec dec-str))
          (num-bits (car parsed-dec))
          (dec (cdr parsed-dec))
          (bytes (max
@@ -88,43 +88,44 @@ of bits, and HEX-STR is the converted hexadecimal string."
     `(,num-bits . ,hex-str)))
 
 (defun baser-dec-to-hex (dec &optional beg end)
-  "Convert signed decimal number DEC to hex.
+  "Convert a decimal number DEC to hex.
 
-DEC is a positive or negative integer.
+DEC can a be number or a string representing a decimal number.
 
 If a region is selected, convert all integers in the selected
 region in the buffer to hex.  BEG and END are auto-set to the
 beginning and end of the selected region.
 
-Else, prompt the user to enter the integer in the minibuffer.  The
+Else, prompt the user to enter the number in the minibuffer.  The
 hex output is printed in the echo area.
 
 When called non-interactively, return the hex string."
   (interactive
    (if (use-region-p)
        (list nil nil (region-beginning) (region-end))
-     (let* ((dec-str (read-string "Enter an integer in decimal: "))
-            (dec-parsed (baser--parse-dec dec-str))
-            (dec-val (cdr dec-parsed)))
-       (list dec-val))))
-  (cond
-   ((and (interactive-p) beg end) ;Fn called interactively after selecting a region
-    (save-excursion
-      (save-restriction
-        (narrow-to-region beg end)
-        (goto-char beg)
-        (while (re-search-forward "\\-?\\(\\([0-9]*'d\\)\\|0x\\)*\\([0-9_]+\\)\\b" nil :noerror)
-          (let ((hex (cdr (baser--dec-to-hex-core (match-string-no-properties 0)))))
-            (replace-match hex))))))
-   ((and (interactive-p) dec) ;Fn called interactively without selecting a region
-    (let* ((dec-parsed (baser--hex-to-dec-core (number-to-string dec)))
-           (num-bits (car dec-parsed))
-           (hex (cdr dec-parsed)))
-      (message "%s" (format "dec %d -> %s (%d bit hexadecimal)" dec hex num-bits))))
-   (dec                                 ;Fn called non-interactively
-    (cdr (baser--dec-to-hex-core (number-to-string dec))))
-   (t                          ;not interactive, no region, dec is nil
-    (error "Unsupported scenario"))))
+     (list (read-string "Enter a decimal number: "))))
+  (let* ((dec-str (if (stringp dec)
+                      dec
+                    (number-to-string dec)))
+         (num-bits-hex (baser--dec-to-hex-core dec-str))
+         num-bits hex)
+	(setq num-bits (car num-bits-hex))
+    (setq hex (cdr num-bits-hex))
+    (cond
+     ((and (interactive-p) beg end) ;Fn called interactively after selecting a region
+      (save-excursion
+        (save-restriction
+          (narrow-to-region beg end)
+          (goto-char beg)
+          (while (re-search-forward "\\-?\\(\\([0-9]*'d\\)\\|0x\\)*\\([0-9_]+\\)\\b" nil :noerror)
+            (let ((hex (cdr (baser--dec-to-hex-core (match-string-no-properties 0)))))
+              (replace-match hex))))))
+     ((and (interactive-p) dec) ;Fn called interactively without selecting a region
+      (message "%s" (format "dec %s -> %s (%d bit hexadecimal)" dec-str hex num-bits)))
+     (dec                               ;Fn called non-interactively
+      hex)
+     (t                          ;not interactive, no region, dec is nil
+      (error "Unsupported scenario")))))
 
 (defun baser--parse-hex (hex)
   "Parse the input HEX string.
@@ -289,7 +290,7 @@ When called non-interactively, return the binary string."
     (let* ((num-bits-bin (baser--hex-to-bin-core hex))
            (num-bits (car num-bits-bin))
            (bin-str (cdr num-bits-bin)))
-      (if (numberp num-bits)
+      (if (integerp num-bits)
           (message "%s" (format "hex %s -> %s (%d bit binary)" hex bin-str num-bits))
         (message "%s" (format "hex %s -> %s (binary)" hex bin-str)))))
    (hex                                 ;Fn called non-interactively
