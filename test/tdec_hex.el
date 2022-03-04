@@ -151,7 +151,8 @@
 (ert-deftest test-hex-to-dec-invalid-hex-inp ()
   (let ((inp '("32'1234_abcd" "a&b" "'habcdefghi")))
     (dolist (hex inp)
-      (should-error (baser-hex-to-dec hex)))))
+      (should-error (baser-hex-to-dec hex)
+                    :type 'user-error))))
 
 
 (provide 'tdec_hex)

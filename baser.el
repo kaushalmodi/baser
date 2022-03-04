@@ -87,7 +87,7 @@ of bits, and HEX-STR is the converted hexadecimal string."
          (dec (cdr parsed-dec))
          hex-str)
     (when (null dec)
-      (error "%s" (format "Input %s is not a valid decimal string" dec-str)))
+      (user-error "%s" (format "Input %s is not a valid decimal string" dec-str)))
     ;; Default value of `num-bits' if not parsed from `dec-str'.
     (setq num-bits (or num-bits baser-default-num-bits))
     (let* ((num-nib (ceiling (/ num-bits 4.0)))
@@ -189,7 +189,7 @@ number of bits, and DEC-VALUE is the converted decimal number."
          (num-bits (or (car parsed-hex) num-bits)) ;Fall back to `num-bits' from arg
          (hex (cdr parsed-hex)))
     (when (null hex)
-      (error "%s" (format "Input %s is not a valid hex string" inp-hex)))
+      (user-error "%s" (format "Input %s is not a valid hex string" inp-hex)))
     ;; Default value of `num-bits' if not set or parsed from `hex'
     ;; string.
     (setq num-bits (or num-bits baser-default-num-bits))
@@ -264,7 +264,7 @@ of bits, and BIN-STR is the binary representation."
          (hex (cdr parsed-hex))
          (bin ""))
     (when (null hex)
-      (error "%s" (format "Input %s is not a valid hex string" hex-str)))
+      (user-error "%s" (format "Input %s is not a valid hex string" hex-str)))
     ;; Default value of `num-bits' if not set or parsed from `hex'
     ;; string.
     (setq num-bits (or num-bits baser-default-num-bits))

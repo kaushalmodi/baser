@@ -43,7 +43,8 @@
 (ert-deftest test-hex-to-bin-invalid-hex-inp ()
   (let ((inp '("32'1234_abcd" "a&b" "'habcdefghi")))
     (dolist (hex inp)
-      (should-error (baser-hex-to-bin hex)))))
+      (should-error (baser-hex-to-bin hex)
+                    :type 'user-error))))
 
 
 ;;;; Binary -> Hexadecimal

@@ -54,7 +54,8 @@
 (ert-deftest test-dec-to-bin-invalid-dec-inp ()
   (let ((inp '("32'd-1234")))
     (dolist (hex inp)
-      (should-error (baser-dec-to-bin hex)))))
+      (should-error (baser-dec-to-bin hex)
+                    :type 'user-error))))
 
 
 ;;;; Binary -> Decimal
