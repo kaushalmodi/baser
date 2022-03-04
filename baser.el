@@ -122,28 +122,27 @@ When called non-interactively, return the hex string."
    (if (use-region-p)
        (list nil nil (region-beginning) (region-end))
      (list (read-string "Enter a decimal number: "))))
-  (let* ((dec-str (if (stringp dec)
-                      dec
-                    (number-to-string dec)))
-         (num-bits-hex (baser--dec-to-hex-core dec-str))
-         num-bits hex)
-	(setq num-bits (car num-bits-hex))
-    (setq hex (cdr num-bits-hex))
-    (cond
-     ((and (interactive-p) beg end) ;Fn called interactively after selecting a region
-      (save-excursion
-        (save-restriction
-          (narrow-to-region beg end)
-          (goto-char beg)
-          (while (re-search-forward "\\-?\\(\\([0-9]*'d\\)\\|0x\\)*\\([0-9_]+\\)\\b" nil :noerror)
-            (let ((hex (cdr (baser--dec-to-hex-core (match-string-no-properties 0)))))
-              (replace-match hex))))))
-     ((and (interactive-p) dec) ;Fn called interactively without selecting a region
-      (message "%s" (format "dec %s -> %s (%d bit hexadecimal)" dec-str hex num-bits)))
-     (dec                               ;Fn called non-interactively
-      hex)
-     (t                          ;not interactive, no region, dec is nil
-      (signal 'baser-unreachable "Unsupported scenario")))))
+  (cond
+   ((and (interactive-p) beg end) ;Fn called interactively after selecting a region
+    (save-excursion
+      (save-restriction
+        (narrow-to-region beg end)
+        (goto-char beg)
+        (while (re-search-forward "\\-?\\(\\([0-9]*'d\\)\\|0x\\)*\\([0-9_]+\\)\\b" nil :noerror)
+          (let ((hex (cdr (baser--dec-to-hex-core (match-string-no-properties 0)))))
+            (replace-match hex))))))
+   (dec
+    (let* ((dec-str (if (stringp dec)
+                        dec
+                      (number-to-string dec)))
+           (num-bits-hex (baser--dec-to-hex-core dec-str))
+           (num-bits (car num-bits-hex))
+           (hex (cdr num-bits-hex)))
+      (if (interactive-p) ;Fn called interactively without selecting a region
+          (message "%s" (format "dec %s -> %s (%d bit hexadecimal)" dec-str hex num-bits)))
+      hex))                             ;Fn called non-interactively
+   (t                          ;not interactive, no region, dec is nil
+    (signal 'baser-unreachable "Unsupported scenario"))))
 
 (defun baser--parse-hex (hex)
   "Parse the input HEX string.
