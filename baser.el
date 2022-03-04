@@ -86,6 +86,8 @@ of bits, and HEX-STR is the converted hexadecimal string."
          (num-bits (car parsed-dec))
          (dec (cdr parsed-dec))
          hex-str)
+    (when (null dec)
+      (error "%s" (format "Input %s is not a valid decimal string" dec-str)))
     ;; Default value of `num-bits' if not parsed from `dec-str'.
     (setq num-bits (or num-bits baser-default-num-bits))
     (let* ((num-nib (ceiling (/ num-bits 4.0)))

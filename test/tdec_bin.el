@@ -51,6 +51,11 @@
         (push (baser-dec-to-bin dec) out))
       (should (equal ref (nreverse out))))))
 
+(ert-deftest test-dec-to-bin-invalid-dec-inp ()
+  (let ((inp '("32'd-1234")))
+    (dolist (hex inp)
+      (should-error (baser-dec-to-bin hex)))))
+
 
 ;;;; Binary -> Decimal
 (ert-deftest test-bin-to-dec ()
