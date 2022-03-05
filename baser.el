@@ -465,7 +465,7 @@ When called non-interactively, return the binary string."
         (let ((num-replacements 0))
           (narrow-to-region beg end)
           (goto-char beg)
-          (while (re-search-forward "\\-?\\(\\([0-9]*'d\\)\\|0x\\)*\\([0-9_]+\\)\\b" nil :noerror)
+          (while (re-search-forward "\\-?\\(\\([0-9]*'d\\)\\)*\\([0-9_]+\\)\\b" nil :noerror)
             (let* ((hex-str (cdr (baser--dec-to-hex-core (match-string-no-properties 0))))
                    (bin-str (cdr (baser--hex-to-bin-core hex-str))))
               (replace-match bin-str)
