@@ -67,6 +67,11 @@
       (push (baser-bin-to-dec bin) out))
     (should (equal ref (nreverse out)))))
 
+(ert-deftest test-bin-to-dec-region-conversion ()
+  (let ((content "4'b1111 'b101 0b1110 2'b11 3'b11")
+        (ref "-1 5 14 -1 3"))
+    (baser-test-conversion-in-buffer #'baser-bin-to-dec content ref)))
+
 (ert-deftest test-bin-to-dec-inp-too-large-8-bits ()
   (let ((inp '("2'b111")))
     (dolist (bin inp)
