@@ -23,6 +23,9 @@
 
 ;;; Code:
 
+(require 'baser-test-lib)
+
+
 ;;;; Decimal -> Hexadecimal
 (ert-deftest test-pos-dec-to-hex ()
   (let ((inp '(    0     10    100   1023   1024   4095   4096  32767))
@@ -58,6 +61,7 @@
     (dolist (dec inp)
       (should-error (baser-dec-to-hex dec)
                     :type 'baser-number-too-large))))
+
 
 ;;;; Hexadecimal -> Decimal
 (ert-deftest test-hex-to-pos-8-bits ()
@@ -128,6 +132,11 @@
     (dolist (hex inp)
       (push (baser-hex-to-dec hex) out))
     (should (equal ref (nreverse out)))))
+
+(ert-deftest test-hex-to-dec-region-conversion ()
+  (let ((content "16'hab_cd 'hffff_fffe 24'h21_12_83")
+        (ref "-21555 -2 2167427"))
+    (baser-test-conversion-in-buffer #'baser-hex-to-dec content ref)))
 
 (ert-deftest test-hex-to-dec-inp-not-string ()
   (let ((inp '(1 1.1 'x)))
