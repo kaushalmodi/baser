@@ -325,7 +325,7 @@ When called non-interactively, return the binary string."
         (let ((num-replacements 0))
           (narrow-to-region beg end)
           (goto-char beg)
-          (while (re-search-forward "\\b\\(\\([0-9]*'h\\)\\|0x\\)\\([0-9a-fA-F_]+\\)\\b" nil :noerror)
+          (while (re-search-forward "\\(\\([0-9]*'h\\)\\|0x\\)\\([0-9a-fA-F_]+\\)\\b" nil :noerror)
             (message "dbg: match 0: %S" (match-string-no-properties 0))
             (let ((bin (cdr (baser--hex-to-bin-core (match-string-no-properties 0)))))
               (message "dbg: bin: %S" bin)

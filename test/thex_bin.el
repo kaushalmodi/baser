@@ -40,6 +40,11 @@
       (push (baser-hex-to-bin hex) out))
     (should (equal ref (nreverse out)))))
 
+(ert-deftest test-hex-to-bin-region-conversion ()
+  (let ((content "0xb 'hc 4'hd 8'he 5'hfa 6'hff")
+        (ref "1011 1100 1101 1110 1_1010 11_1111"))
+    (baser-test-conversion-in-buffer #'baser-hex-to-bin content ref)))
+
 (ert-deftest test-hex-to-bin-invalid-hex-inp ()
   (let ((inp '("32'1234_abcd" "a&b" "'habcdefghi")))
     (dolist (hex inp)
