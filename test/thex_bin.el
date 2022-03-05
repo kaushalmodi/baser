@@ -61,6 +61,11 @@
       (push (baser-bin-to-hex bin) out))
     (should (equal ref (nreverse out)))))
 
+(ert-deftest test-bin-to-hex-region-conversion ()
+  (let ((content "16'b1010 4'b1011 8'b1100 12'b11_01 4'b1111 0b1010_0101")
+        (ref "000a b 0c 00d f 00a5"))
+    (baser-test-conversion-in-buffer #'baser-bin-to-hex content ref)))
+
 (ert-deftest test-bin-to-hex-inp-too-large-8-bits ()
   (let ((inp '("1'b10")))
     (dolist (bin inp)
