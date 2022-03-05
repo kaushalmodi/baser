@@ -129,7 +129,7 @@ When called non-interactively, return the hex string."
         (let ((num-replacements 0))
           (narrow-to-region beg end)
           (goto-char beg)
-          (while (re-search-forward "\\b\\-?\\([0-9]*'d\\)*\\([0-9_]+\\)\\b" nil :noerror)
+          (while (re-search-forward "\\-?\\(\\([0-9]*'d\\)\\)*\\([0-9_]+\\)\\b" nil :noerror)
             (message "dbg: match0: %S" (match-string-no-properties 0))
             (let ((hex (cdr (baser--dec-to-hex-core (match-string-no-properties 0)))))
               (replace-match hex)

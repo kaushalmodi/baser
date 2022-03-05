@@ -51,6 +51,11 @@
       (push (baser-dec-to-hex dec) out))
     (should (equal ref (nreverse out)))))
 
+(ert-deftest test-dec-to-hex-region-conversion ()
+  (let ((content "123 -123 -4'd1 16'd1000 -8'd1 32'd65535 -1 -2 -1023 -1024")
+        (ref "007b ff85 f 03e8 ff 0000ffff ffff fffe fc01 fc00"))
+    (baser-test-conversion-in-buffer #'baser-dec-to-hex content ref)))
+
 (ert-deftest test-pos-dec-to-hex-inp-not-int ()
   (let ((inp '("a" 1.1 'x)))
     (dolist (i inp)
