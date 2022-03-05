@@ -22,6 +22,9 @@
 ;; Test conversions between hexadecimal and binary.
 
 ;;; Code:
+(require 'ert)
+(require 'baser)
+(require 'baser-test-lib)
 
 ;;;; Hexadecimal -> Binary
 (ert-deftest test-hex-to-bin ()

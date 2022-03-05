@@ -22,9 +22,9 @@
 ;; Test conversions between decimal and hexadecimal.
 
 ;;; Code:
-
+(require 'ert)
+(require 'baser)
 (require 'baser-test-lib)
-
 
 ;;;; Decimal -> Hexadecimal
 (ert-deftest test-pos-dec-to-hex ()

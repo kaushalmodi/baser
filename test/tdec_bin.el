@@ -22,6 +22,9 @@
 ;; Test conversions between decimal and binary.
 
 ;;; Code:
+(require 'ert)
+(require 'baser)
+(require 'baser-test-lib)
 
 ;;;; Decimal -> Binary
 (ert-deftest test-pos-dec-to-bin ()

@@ -21,8 +21,6 @@
 
 (setq load-prefer-newer t)
 
-(require 'baser)
-
 (require 'tdec_hex)
 (require 'thex_bin)
 (require 'tdec_bin)
