@@ -22,7 +22,6 @@
 ;; Test conversions between decimal and binary.
 
 ;;; Code:
-(require 'ert)
 (require 'baser)
 (require 'baser-test-lib)
 

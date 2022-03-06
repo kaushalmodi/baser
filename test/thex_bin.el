@@ -22,7 +22,6 @@
 ;; Test conversions between hexadecimal and binary.
 
 ;;; Code:
-(require 'ert)
 (require 'baser)
 (require 'baser-test-lib)
 
