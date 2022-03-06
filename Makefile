@@ -10,4 +10,4 @@ MATCH ?=
 .PHONY: test
 
 test:
-	$(EMACS) --batch -L . -L $(TEST_DIR) -l all_tests.el -eval '(ert-run-tests-batch-and-exit "$(MATCH)")'
+	$(EMACS) --batch -L . -L $(TEST_DIR) -l all-tests.el -eval '(ert-run-tests-batch-and-exit "$(MATCH)")'

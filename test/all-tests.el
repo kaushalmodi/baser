@@ -1,4 +1,4 @@
-;;; all_tests.el --- Tests for baser.el                   -*- lexical-binding: t; -*-
+;;; all-tests.el --- Tests for baser.el                   -*- lexical-binding: t; -*-
 
 ;; Authors: Kaushal Modi <kaushal.modi@gmail.com>
 
@@ -21,6 +21,6 @@
 
 (setq load-prefer-newer t)
 
-(require 'tdec_hex)
-(require 'thex_bin)
-(require 'tdec_bin)
+(require 'tdec-hex)
+(require 'thex-bin)
+(require 'tdec-bin)

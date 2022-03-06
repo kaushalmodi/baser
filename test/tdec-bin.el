@@ -90,4 +90,4 @@
                     :type 'baser-number-too-large))))
 
 
-(provide 'tdec_bin)
+(provide 'tdec-bin)

@@ -75,4 +75,4 @@
                     :type 'baser-number-too-large))))
 
 
-(provide 'thex_bin)
+(provide 'thex-bin)

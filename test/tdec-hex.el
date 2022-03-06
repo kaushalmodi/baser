@@ -168,4 +168,4 @@
                     :type 'user-error))))
 
 
-(provide 'tdec_hex)
+(provide 'tdec-hex)

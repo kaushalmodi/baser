@@ -21,9 +21,9 @@ expression of the conversion function.
 
 - Examples ::
   #+begin_src emacs-lisp
-  (baser-dec-to-hex 100)       ;; => "0064"
-  (baser-dec-to-hex "8'd55")   ;; => "0037"
-  (baser-dec-to-hex "-8'd55")  ;; => "ffc9"
+  (baser-dec-to-hex 100)       ;; => "00000064"
+  (baser-dec-to-hex "8'd55")   ;; => "37"
+  (baser-dec-to-hex "-8'd55")  ;; => "c9"
 
   (baser-hex-to-dec "0x100")   ;; => 256
   (baser-hex-to-dec "12'hfff") ;; => -1
