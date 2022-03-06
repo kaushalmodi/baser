@@ -28,16 +28,16 @@
 
 ;;;; Decimal -> Hexadecimal
 (ert-deftest test-pos-dec-to-hex ()
-  (let ((inp '(    0     10    100   1023   1024   4095   4096  32767))
-        (ref '("0000" "000a" "0064" "03ff" "0400" "0fff" "1000" "7fff"))
+  (let ((inp '(        0         10       1023       1024  2147483647))
+        (ref '("00000000" "0000000a" "000003ff" "00000400"  "7fffffff"))
         out)
     (dolist (dec inp)
       (push (baser-dec-to-hex dec) out))
     (should (equal ref (nreverse out)))))
 
 (ert-deftest test-neg-dec-to-hex ()
-  (let ((inp '(   -1     -2  -1023  -1024))
-        (ref '("ffff" "fffe" "fc01" "fc00"))
+  (let ((inp '(       -1         -2      -1023      -1024))
+        (ref '("ffffffff" "fffffffe" "fffffc01" "fffffc00"))
         out)
     (dolist (dec inp)
       (push (baser-dec-to-hex dec) out))
@@ -53,7 +53,7 @@
 
 (ert-deftest test-dec-to-hex-region-conversion ()
   (let ((content "123 -123 -4'd1 16'd1000 -8'd1 32'd65535 -1 -2 -1023 -1024")
-        (ref "007b ff85 f 03e8 ff 0000ffff ffff fffe fc01 fc00"))
+        (ref "0000007b ffffff85 f 03e8 ff 0000ffff ffffffff fffffffe fffffc01 fffffc00"))
     (baser-test-conversion-in-buffer #'baser-dec-to-hex content ref)))
 
 (ert-deftest test-pos-dec-to-hex-inp-not-int ()
@@ -62,7 +62,7 @@
       (should-error (baser-dec-to-hex i)))))
 
 (ert-deftest test-dec-to-hex-inp-too-large ()
-  (let ((inp '(65535 "3'd4" "-2'd3")))
+  (let ((inp '(4294967295 "3'd4" "-2'd3")))
     (dolist (dec inp)
       (should-error (baser-dec-to-hex dec)
                     :type 'baser-number-too-large))))

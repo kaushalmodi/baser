@@ -28,16 +28,16 @@
 
 ;;;; Decimal -> Binary
 (ert-deftest test-pos-dec-to-bin ()
-  (let ((inp '(                   0                 12345  "4'd7" "3'd3"    "8'd100"))
-        (ref '("0000_0000_0000_0000" "0011_0000_0011_1001" "0111"  "011" "0110_0100"))
+  (let ((inp '(                                       0  "4'd7" "3'd3"    "8'd100"))
+        (ref '("0000_0000_0000_0000_0000_0000_0000_0000" "0111"  "011" "0110_0100"))
         out)
     (dolist (dec inp)
       (push (baser-dec-to-bin dec) out))
     (should (equal ref (nreverse out)))))
 
 (ert-deftest test-neg-dec-to-bin ()
-  (let ((inp '(                  -1  "-4'd2"     "-8'd3"))
-        (ref '("1111_1111_1111_1111"  "1110" "1111_1101"))
+  (let ((inp '(                                      -1  "-4'd2"     "-8'd3"))
+        (ref '("1111_1111_1111_1111_1111_1111_1111_1111"  "1110" "1111_1101"))
         out)
     (dolist (dec inp)
       (push (baser-dec-to-bin dec) out))
@@ -45,7 +45,11 @@
 
 (ert-deftest test-dec-to-bin-region-conversion ()
   (let ((content "-1 -4'd2 12345 -8'd3 0")
-        (ref "1111_1111_1111_1111 1110 0011_0000_0011_1001 1111_1101 0000_0000_0000_0000"))
+        (ref (concat "1111_1111_1111_1111_1111_1111_1111_1111"
+                     " 1110"
+                     " 0000_0000_0000_0000_0011_0000_0011_1001"
+                     " 1111_1101"
+                     " 0000_0000_0000_0000_0000_0000_0000_0000")))
     (baser-test-conversion-in-buffer #'baser-dec-to-bin content ref)))
 
 ;; This large number conversion test fails on emacs 26.3 and older

@@ -30,7 +30,7 @@
 
 ;;; Variables
 
-(defcustom baser-default-num-bits 16
+(defcustom baser-default-num-bits 32
   "Number of bits to be assumed if not parsed from the string."
   :group 'baser
   :type 'integer)

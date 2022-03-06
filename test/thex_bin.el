@@ -57,8 +57,8 @@
 
 ;;;; Binary -> Hexadecimal
 (ert-deftest test-bin-to-hex ()
-  (let ((inp '("1010" "4'b1011" "8'b1100" "12'b11_01" "4'b1111" "0b1010_0101"))
-        (ref '("000a"       "b"      "0c"      "00d"        "f"        "00a5"))
+  (let ((inp '(    "1010" "4'b1011" "8'b1100" "12'b11_01" "4'b1111" "0b1010_0101"))
+        (ref '("0000000a"       "b"      "0c"      "00d"        "f"    "000000a5"))
         out)
     (dolist (bin inp)
       (push (baser-bin-to-hex bin) out))
@@ -66,7 +66,7 @@
 
 (ert-deftest test-bin-to-hex-region-conversion ()
   (let ((content "16'b1010 4'b1011 8'b1100 12'b11_01 4'b1111 0b1010_0101")
-        (ref "000a b 0c 00d f 00a5"))
+        (ref "000a b 0c 00d f 000000a5"))
     (baser-test-conversion-in-buffer #'baser-bin-to-hex content ref)))
 
 (ert-deftest test-bin-to-hex-inp-too-large-8-bits ()
