@@ -53,6 +53,14 @@ expression of the conversion function.
 |-----------------------+-------------+--------------------|
 * Development
 ** Running Tests
+*** Run all tests
 #+begin_src shell
 make test
+#+end_src
+*** Run tests matching a specific string
+Run ~make test MATCH=<string>~. For example, to run all tests where
+the name matches "hex-to-dec" completely or partially, run:
+
+#+begin_src shell
+make test MATCH=hex-to-dec
 #+end_src
