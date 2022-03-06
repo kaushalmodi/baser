@@ -4,8 +4,8 @@ EMACS ?= emacs
 
 TEST_DIR=$(shell pwd)/test
 
-# Run all tests by default
-MATCH ?= t
+# Run all tests by default.
+MATCH ?=
 
 .PHONY: test
 
