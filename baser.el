@@ -476,8 +476,10 @@ When called non-interactively, return the binary string."
    ((or beg end)                   ;Fn called after selecting a region
     (baser--convert-in-region beg end "\\-?\\(\\([0-9]*'d\\)\\)*\\([0-9_]+\\)\\b"
                               (lambda (match-str)
-                                (let* ((hex-str (cdr (baser--dec-to-hex-core match-str)))
-                                       (bin-str (cdr (baser--hex-to-bin-core hex-str))))
+                                (let* ((num-bits-hex (baser--dec-to-hex-core match-str))
+                                       (num-bits (car num-bits-hex))
+                                       (hex-str (cdr num-bits-hex))
+                                       (bin-str (cdr (baser--hex-to-bin-core hex-str num-bits))))
                                   bin-str))
                               "dec -> bin"))
    (t
