@@ -138,8 +138,8 @@
     (should (equal ref (nreverse out)))))
 
 (ert-deftest test-hex-to-dec-region-conversion ()
-  (let ((content "16'hab_cd 'hffff_fffe 24'h21_12_83")
-        (ref "-21555 -2 2167427"))
+  (let ((content "16'hab_cd 'hffff_fffe 24'h21_12_83 9'hff 8'hff")
+        (ref "-21555 -2 2167427 255 -1"))
     (baser-test-conversion-in-buffer #'baser-hex-to-dec content ref)))
 
 (ert-deftest test-hex-to-dec-inp-not-string ()
