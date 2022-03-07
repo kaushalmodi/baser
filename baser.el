@@ -123,17 +123,6 @@ When called non-interactively, return the hex string."
        (list nil (region-beginning) (region-end))
      (list (read-string "Enter a decimal number: "))))
   (cond
-   ((and (called-interactively-p) beg end) ;Fn called interactively after selecting a region
-    (save-excursion
-      (save-restriction
-        (let ((num-replacements 0))
-          (narrow-to-region beg end)
-          (goto-char beg)
-          (while (re-search-forward "\\-?\\(\\([0-9]*'d\\)\\)*\\([0-9_]+\\)\\b" nil :noerror)
-            (let ((hex (cdr (baser--dec-to-hex-core (match-string-no-properties 0)))))
-              (replace-match hex)
-              (cl-incf num-replacements)))
-          (message "Made %d dec -> hex conversions" num-replacements)))))
    (dec
     (let* ((dec-str (if (stringp dec)
                         dec
@@ -144,7 +133,18 @@ When called non-interactively, return the hex string."
       (if (called-interactively-p) ;Fn called interactively without selecting a region
           (message "%s" (format "dec %s -> %s (%d bit hexadecimal)" dec-str hex num-bits)))
       hex))                             ;Fn called non-interactively
-   (t                          ;not interactive, no region, dec is nil
+   ((and beg end)                  ;Fn called after selecting a region
+    (save-excursion
+      (save-restriction
+        (let ((num-replacements 0))
+          (narrow-to-region beg end)
+          (goto-char beg)
+          (while (re-search-forward "\\-?\\(\\([0-9]*'d\\)\\)*\\([0-9_]+\\)\\b" nil :noerror)
+            (let ((hex (cdr (baser--dec-to-hex-core (match-string-no-properties 0)))))
+              (replace-match hex)
+              (cl-incf num-replacements)))
+          (message "Made %d dec -> hex conversions" num-replacements)))))
+   (t
     (signal 'baser-unreachable "Unsupported scenario"))))
 
 (defun baser--parse-hex (hex)
@@ -231,7 +231,14 @@ When called non-interactively, returns the decimal value."
        (list nil nil (region-beginning) (region-end))
      (list (read-string "Enter a hex number: "))))
   (cond
-   ((and (called-interactively-p) beg end) ;Fn called interactively after selecting a region
+   (hex
+    (let* ((num-bits-dec (baser--hex-to-dec-core hex num-bits))
+           (num-bits (car num-bits-dec))
+           (dec-val (cdr num-bits-dec)))
+      (if (called-interactively-p)        ;Fn called interactively
+          (message "%s" (format "hex %s -> %s (%d bit decimal)" hex dec-val num-bits))
+        dec-val))) ;Fn called non-interactively
+   ((and beg end) ;Fn called after selecting a region
     (save-excursion
       (save-restriction
         (let ((num-replacements 0))
@@ -242,14 +249,7 @@ When called non-interactively, returns the decimal value."
               (replace-match (number-to-string dec))
               (cl-incf num-replacements)))
           (message "Made %d hex -> dec conversions" num-replacements)))))
-   ((and (called-interactively-p) hex) ;Fn called interactively without selecting a region
-    (let* ((num-bits-dec (baser--hex-to-dec-core hex))
-           (num-bits (car num-bits-dec))
-           (dec-val (cdr num-bits-dec)))
-      (message "%s" (format "hex %s -> %s (%d bit decimal)" hex dec-val num-bits))))
-   (hex                                 ;Fn called non-interactively
-    (cdr (baser--hex-to-dec-core hex num-bits)))
-   (t                        ;not interactive, no region, hex is nil
+   (t
     (signal 'baser-unreachable "Unsupported scenario"))))
 
 
@@ -318,7 +318,16 @@ When called non-interactively, return the binary string."
        (list nil (region-beginning) (region-end))
      (list (read-string "Enter a hex number: "))))
   (cond
-   ((and (called-interactively-p) beg end) ;Fn called interactively after selecting a region
+   (hex
+    (let* ((num-bits-bin (baser--hex-to-bin-core hex))
+           (num-bits (car num-bits-bin))
+           (bin-str (cdr num-bits-bin)))
+      (if (called-interactively-p)      ;Fn called interactively
+          (if (integerp num-bits)
+              (message "%s" (format "hex %s -> %s (%d bit binary)" hex bin-str num-bits))
+            (message "%s" (format "hex %s -> %s (binary)" hex bin-str)))
+        bin-str)))                 ;Fn called non-interactively
+   ((and beg end) ;Fn called after selecting a region
     (save-excursion
       (save-restriction
         (let ((num-replacements 0))
@@ -329,16 +338,7 @@ When called non-interactively, return the binary string."
               (replace-match bin)
               (cl-incf num-replacements)))
           (message "Made %d hex -> bin conversions" num-replacements)))))
-   ((and (called-interactively-p) hex) ;Fn called interactively without selecting a region
-    (let* ((num-bits-bin (baser--hex-to-bin-core hex))
-           (num-bits (car num-bits-bin))
-           (bin-str (cdr num-bits-bin)))
-      (if (integerp num-bits)
-          (message "%s" (format "hex %s -> %s (%d bit binary)" hex bin-str num-bits))
-        (message "%s" (format "hex %s -> %s (binary)" hex bin-str)))))
-   (hex                                 ;Fn called non-interactively
-    (cdr (baser--hex-to-bin-core hex)))
-   (t                        ;not interactive, no region, hex is nil
+   (t
     (signal 'baser-unreachable "Unsupported scenario"))))
 
 (defun baser--parse-bin (bin)
@@ -414,7 +414,14 @@ When called non-interactively, return the hex string."
        (list nil (region-beginning) (region-end))
      (list (read-string "Enter a binary string: "))))
   (cond
-   ((and (called-interactively-p) beg end) ;Fn called interactively after selecting a region
+   (bin
+    (let* ((num-bits-hex (baser--bin-to-hex-core bin))
+           (num-bits (car num-bits-hex))
+           (hex (cdr num-bits-hex)))
+      (if (called-interactively-p)      ;Fn called interactively
+          (message "%s" (format "bin %s -> %s (%d bit hexadecimal)" bin hex num-bits)))
+      hex))                        ;Fn called non-interactively
+   ((and beg end)                  ;Fn called after selecting a region
     (save-excursion
       (save-restriction
         (let ((num-replacements 0))
@@ -425,14 +432,7 @@ When called non-interactively, return the hex string."
               (replace-match hex)
               (cl-incf num-replacements)))
           (message "Made %d bin -> hex conversions" num-replacements)))))
-   (bin
-    (let* ((num-bits-hex (baser--bin-to-hex-core bin))
-           (num-bits (car num-bits-hex))
-           (hex (cdr num-bits-hex)))
-      (if (called-interactively-p) ;Fn called interactively without selecting a region
-          (message "%s" (format "bin %s -> %s (%d bit hexadecimal)" bin hex num-bits)))
-      hex))                    ;Fn called non-interactively
-   (t                          ;not interactive, no region, bin is nil
+   (t
     (signal 'baser-unreachable "Unsupported scenario"))))
 
 
@@ -456,7 +456,18 @@ When called non-interactively, return the binary string."
        (list nil (region-beginning) (region-end))
      (list (read-string "Enter a decimal number: "))))
   (cond
-   ((and (called-interactively-p) beg end) ;Fn called interactively after selecting a region
+   (dec
+    (let* ((dec-str (if (stringp dec)
+                        dec
+                      (number-to-string dec)))
+           (num-bits-hex (baser--dec-to-hex-core dec-str))
+           (num-bits (car num-bits-hex))
+           (hex-str (cdr num-bits-hex))
+           (bin-str (cdr (baser--hex-to-bin-core hex-str num-bits))))
+      (if (called-interactively-p) ;Fn called interactively
+          (message "%s" (format "dec %s -> %s (%d bit binary)" dec-str bin-str num-bits)))
+      bin-str))                ;Fn called non-interactively
+   ((and beg end)              ;Fn called after selecting a region
     (save-excursion
       (save-restriction
         (let ((num-replacements 0))
@@ -468,18 +479,7 @@ When called non-interactively, return the binary string."
               (replace-match bin-str)
               (cl-incf num-replacements)))
           (message "Made %d dec -> bin conversions" num-replacements)))))
-   (dec
-    (let* ((dec-str (if (stringp dec)
-                        dec
-                      (number-to-string dec)))
-           (num-bits-hex (baser--dec-to-hex-core dec-str))
-           (num-bits (car num-bits-hex))
-           (hex-str (cdr num-bits-hex))
-           (bin-str (cdr (baser--hex-to-bin-core hex-str num-bits))))
-      (if (called-interactively-p) ;Fn called interactively without selecting a region
-          (message "%s" (format "dec %s -> %s (%d bit binary)" dec-str bin-str num-bits)))
-      bin-str))                ;Fn called non-interactively
-   (t                          ;not interactive, no region, dec is nil
+   (t
     (signal 'baser-unreachable "Unsupported scenario"))))
 
 (defun baser-bin-to-dec (bin &optional beg end)
@@ -498,7 +498,15 @@ When called non-interactively, returns the decimal value."
        (list nil (region-beginning) (region-end))
      (list (read-string "Enter a binary string: "))))
   (cond
-   ((and (called-interactively-p) beg end) ;Fn called interactively after selecting a region
+   (bin
+    (let* ((num-bits-hex (baser--bin-to-hex-core bin))
+           (num-bits (car num-bits-hex))
+           (hex-str (cdr num-bits-hex))
+           (dec-val (cdr (baser--hex-to-dec-core hex-str num-bits))))
+      (if (called-interactively-p)      ;Fn called interactively
+          (message "%s" (format "bin %s -> %s (%d bit decimal)" bin dec-val num-bits))
+        dec-val)))                 ;Fn called non-interactively
+   ((and beg end)                  ;Fn called after selecting a region
     (save-excursion
       (save-restriction
         (let ((num-replacements 0))
@@ -512,15 +520,7 @@ When called non-interactively, returns the decimal value."
               (replace-match (number-to-string dec-val))
               (cl-incf num-replacements)))
           (message "Made %d bin -> dec conversions" num-replacements)))))
-   (bin
-    (let* ((num-bits-hex (baser--bin-to-hex-core bin))
-           (num-bits (car num-bits-hex))
-           (hex-str (cdr num-bits-hex))
-           (dec-val (cdr (baser--hex-to-dec-core hex-str num-bits))))
-      (if (called-interactively-p) ;Fn called interactively without selecting a region
-          (message "%s" (format "bin %s -> %s (%d bit decimal)" bin dec-val num-bits))
-        dec-val)))                        ;Fn called non-interactively
-   (t                          ;not interactive, no region, bin is nil
+   (t
     (signal 'baser-unreachable "Unsupported scenario"))))
 
 
