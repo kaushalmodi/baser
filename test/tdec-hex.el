@@ -68,7 +68,7 @@
 
 
 ;;;; Hexadecimal -> Decimal
-(ert-deftest test-hex-to-pos-8-bits ()
+(ert-deftest test-hex-to-dec-pos-8-bits ()
   (let ((num-bits 8)
         (inp '("0x0f" "f" "0f" "0x00" "0x01"))
         (ref '(   15  15   15      0      1))
@@ -77,7 +77,7 @@
       (push (baser-hex-to-dec hex num-bits) out))
     (should (equal ref (nreverse out)))))
 
-(ert-deftest test-hex-to-pos-16-bits ()
+(ert-deftest test-hex-to-dec-pos-16-bits ()
   (let ((num-bits 16)
         (inp '("0x0f" "0xff" "f" "ff" "0x000F" "0x00" "0x01" "0x0FFF" "0x7fFf"))
         (ref '(   15    255  15  255       15      0      1     4095    32767))
@@ -86,7 +86,7 @@
       (push (baser-hex-to-dec hex num-bits) out))
     (should (equal ref (nreverse out)))))
 
-(ert-deftest test-hex-to-neg-8-bits ()
+(ert-deftest test-hex-to-dec-neg-8-bits ()
   (let ((num-bits 8)
         (inp '("0xff" "ff" "0xfe" "FD" "8'hfc" "'hfb"))
         (ref '(   -1   -1     -2   -3      -4    251))
@@ -95,7 +95,7 @@
       (push (baser-hex-to-dec hex num-bits) out))
     (should (equal ref (nreverse out)))))
 
-(ert-deftest test-hex-to-neg-16-bits ()
+(ert-deftest test-hex-to-dec-neg-16-bits ()
   (let ((num-bits 16)
         (inp '("0xffff" "0xfffe" "0x8000" "0x8001"))
         (ref '(     -1       -2   -32768   -32767))
