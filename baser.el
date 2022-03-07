@@ -39,9 +39,38 @@
 (define-error 'baser-unreachable "Reached an unreachable scenario")
 
 
-;;; Functions
+
+;;; Macros
+(defmacro baser--convert-in-region (beg end rgx fn msg)
+  "Macro to call the conversion function FN in the region between BEG and END.
+
+RGX is the regular expression string used to match the number
+format to be converted from.
+
+FN is a function that accepts a string argument (the entire
+string matched by RGX) and returns the converted string that
+should replace that entire match.
+
+MSG is a string like \"hex -> dec\" that gets printed in the
+region conversion summary message.  This message is to provide a
+confirmation on what conversion just finished."
+  (let ((beg (or beg (point-min)))
+        (end (or end (point-max))))
+    `(save-excursion
+       (save-restriction
+         (let ((num-replacements 0))
+           (narrow-to-region beg end)
+           (goto-char beg)
+           (while (re-search-forward ,rgx nil :noerror)
+             (let ((converted (apply ,fn (list (match-string-no-properties 0)))))
+               (replace-match converted)
+               (cl-incf num-replacements)))
+           (message "Made %d %s conversions" num-replacements ,msg ))))))
+
 
 
+;;; Functions
+
 ;;;; Decimal <-> Hexadecimal
 (defun baser--parse-dec (dec)
   "Parse the input DEC string.
@@ -132,18 +161,12 @@ When called non-interactively, return the hex string."
            (hex (cdr num-bits-hex)))
       (if (called-interactively-p) ;Fn called interactively without selecting a region
           (message "%s" (format "dec %s -> %s (%d bit hexadecimal)" dec-str hex num-bits)))
-      hex))                             ;Fn called non-interactively
-   ((and beg end)                  ;Fn called after selecting a region
-    (save-excursion
-      (save-restriction
-        (let ((num-replacements 0))
-          (narrow-to-region beg end)
-          (goto-char beg)
-          (while (re-search-forward "\\-?\\(\\([0-9]*'d\\)\\)*\\([0-9_]+\\)\\b" nil :noerror)
-            (let ((hex (cdr (baser--dec-to-hex-core (match-string-no-properties 0)))))
-              (replace-match hex)
-              (cl-incf num-replacements)))
-          (message "Made %d dec -> hex conversions" num-replacements)))))
+      hex))                        ;Fn called non-interactively
+   ((or beg end)                   ;Fn called after selecting a region
+    (baser--convert-in-region beg end "\\-?\\(\\([0-9]*'d\\)\\)*\\([0-9_]+\\)\\b"
+                              (lambda (match-str)
+                                (cdr (baser--dec-to-hex-core match-str)))
+                              "dec -> hex"))
    (t
     (signal 'baser-unreachable "Unsupported scenario"))))
 
@@ -237,18 +260,13 @@ When called non-interactively, returns the decimal value."
            (dec-val (cdr num-bits-dec)))
       (if (called-interactively-p)        ;Fn called interactively
           (message "%s" (format "hex %s -> %s (%d bit decimal)" hex dec-val num-bits))
-        dec-val))) ;Fn called non-interactively
-   ((and beg end) ;Fn called after selecting a region
-    (save-excursion
-      (save-restriction
-        (let ((num-replacements 0))
-          (narrow-to-region beg end)
-          (goto-char beg)
-          (while (re-search-forward "\\(\\([0-9]*'h\\)\\|0x\\)\\([0-9a-fA-F_]+\\)\\b" nil :noerror)
-            (let ((dec (cdr (baser--hex-to-dec-core (match-string-no-properties 0)))))
-              (replace-match (number-to-string dec))
-              (cl-incf num-replacements)))
-          (message "Made %d hex -> dec conversions" num-replacements)))))
+        dec-val)))                 ;Fn called non-interactively
+   ((or beg end)                   ;Fn called after selecting a region
+    (baser--convert-in-region beg end "\\(\\([0-9]*'h\\)\\|0x\\)\\([0-9a-fA-F_]+\\)\\b"
+                              (lambda (match-str)
+                                (number-to-string
+                                 (cdr (baser--hex-to-dec-core match-str))))
+                              "hex -> dec"))
    (t
     (signal 'baser-unreachable "Unsupported scenario"))))
 
@@ -327,17 +345,11 @@ When called non-interactively, return the binary string."
               (message "%s" (format "hex %s -> %s (%d bit binary)" hex bin-str num-bits))
             (message "%s" (format "hex %s -> %s (binary)" hex bin-str)))
         bin-str)))                 ;Fn called non-interactively
-   ((and beg end) ;Fn called after selecting a region
-    (save-excursion
-      (save-restriction
-        (let ((num-replacements 0))
-          (narrow-to-region beg end)
-          (goto-char beg)
-          (while (re-search-forward "\\(\\([0-9]*'h\\)\\|0x\\)\\([0-9a-fA-F_]+\\)\\b" nil :noerror)
-            (let ((bin (cdr (baser--hex-to-bin-core (match-string-no-properties 0)))))
-              (replace-match bin)
-              (cl-incf num-replacements)))
-          (message "Made %d hex -> bin conversions" num-replacements)))))
+   ((or beg end)                   ;Fn called after selecting a region
+    (baser--convert-in-region beg end "\\(\\([0-9]*'h\\)\\|0x\\)\\([0-9a-fA-F_]+\\)\\b"
+                              (lambda (match-str)
+                                (cdr (baser--hex-to-bin-core match-str)))
+                              "hex -> bin"))
    (t
     (signal 'baser-unreachable "Unsupported scenario"))))
 
@@ -421,17 +433,11 @@ When called non-interactively, return the hex string."
       (if (called-interactively-p)      ;Fn called interactively
           (message "%s" (format "bin %s -> %s (%d bit hexadecimal)" bin hex num-bits)))
       hex))                        ;Fn called non-interactively
-   ((and beg end)                  ;Fn called after selecting a region
-    (save-excursion
-      (save-restriction
-        (let ((num-replacements 0))
-          (narrow-to-region beg end)
-          (goto-char beg)
-          (while (re-search-forward "\\b\\(\\([0-9]*'b\\)\\|0b\\)?\\([01_]+\\)\\b" nil :noerror)
-            (let ((hex (cdr (baser--bin-to-hex-core (match-string-no-properties 0)))))
-              (replace-match hex)
-              (cl-incf num-replacements)))
-          (message "Made %d bin -> hex conversions" num-replacements)))))
+   ((or beg end)                   ;Fn called after selecting a region
+    (baser--convert-in-region beg end "\\(\\([0-9]*'b\\)\\|0b\\)\\([01_]+\\)\\b"
+                              (lambda (match-str)
+                                (cdr (baser--bin-to-hex-core match-str)))
+                              "bin -> hex"))
    (t
     (signal 'baser-unreachable "Unsupported scenario"))))
 
@@ -467,18 +473,13 @@ When called non-interactively, return the binary string."
       (if (called-interactively-p) ;Fn called interactively
           (message "%s" (format "dec %s -> %s (%d bit binary)" dec-str bin-str num-bits)))
       bin-str))                ;Fn called non-interactively
-   ((and beg end)              ;Fn called after selecting a region
-    (save-excursion
-      (save-restriction
-        (let ((num-replacements 0))
-          (narrow-to-region beg end)
-          (goto-char beg)
-          (while (re-search-forward "\\-?\\(\\([0-9]*'d\\)\\)*\\([0-9_]+\\)\\b" nil :noerror)
-            (let* ((hex-str (cdr (baser--dec-to-hex-core (match-string-no-properties 0))))
-                   (bin-str (cdr (baser--hex-to-bin-core hex-str))))
-              (replace-match bin-str)
-              (cl-incf num-replacements)))
-          (message "Made %d dec -> bin conversions" num-replacements)))))
+   ((or beg end)                   ;Fn called after selecting a region
+    (baser--convert-in-region beg end "\\-?\\(\\([0-9]*'d\\)\\)*\\([0-9_]+\\)\\b"
+                              (lambda (match-str)
+                                (let* ((hex-str (cdr (baser--dec-to-hex-core match-str)))
+                                       (bin-str (cdr (baser--hex-to-bin-core hex-str))))
+                                  bin-str))
+                              "dec -> bin"))
    (t
     (signal 'baser-unreachable "Unsupported scenario"))))
 
@@ -506,20 +507,15 @@ When called non-interactively, returns the decimal value."
       (if (called-interactively-p)      ;Fn called interactively
           (message "%s" (format "bin %s -> %s (%d bit decimal)" bin dec-val num-bits))
         dec-val)))                 ;Fn called non-interactively
-   ((and beg end)                  ;Fn called after selecting a region
-    (save-excursion
-      (save-restriction
-        (let ((num-replacements 0))
-          (narrow-to-region beg end)
-          (goto-char beg)
-          (while (re-search-forward "\\(\\([0-9]*'b\\)\\|0b\\)\\([01_]+\\)\\b" nil :noerror)
-            (let* ((num-bits-hex (baser--bin-to-hex-core (match-string-no-properties 0)))
-                   (num-bits (car num-bits-hex))
-                   (hex-str (cdr num-bits-hex))
-                   (dec-val (cdr (baser--hex-to-dec-core hex-str num-bits))))
-              (replace-match (number-to-string dec-val))
-              (cl-incf num-replacements)))
-          (message "Made %d bin -> dec conversions" num-replacements)))))
+   ((or beg end)                   ;Fn called after selecting a region
+    (baser--convert-in-region beg end "\\(\\([0-9]*'b\\)\\|0b\\)\\([01_]+\\)\\b"
+                              (lambda (match-str)
+                                (let* ((num-bits-hex (baser--bin-to-hex-core match-str))
+                                       (num-bits (car num-bits-hex))
+                                       (hex-str (cdr num-bits-hex))
+                                       (dec-val (cdr (baser--hex-to-dec-core hex-str num-bits))))
+                                  (number-to-string dec-val)))
+                              "bin -> dec"))
    (t
     (signal 'baser-unreachable "Unsupported scenario"))))
 
